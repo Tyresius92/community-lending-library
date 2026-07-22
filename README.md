@@ -1,5 +1,6 @@
 > [!NOTE]  
 > This repo has been archived. Please refer instead to:
+>
 > - The official [React Router templates](https://github.com/remix-run/react-router-templates/) for simple templates to get started with
 > - [The Epic Stack](https://github.com/epicweb-dev/epic-stack) for a more comprehensive, batteries-included option
 > - [Remix Discord](https://rmx.as/discord) to ask and share community templates
@@ -39,15 +40,6 @@ Click this button to create a [Gitpod](https://gitpod.io) workspace with the pro
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/remix-run/blues-stack/tree/main)
 
 ## Development
-
-- First run this stack's `remix.init` script and commit the changes it makes to your project.
-
-  ```sh
-  npx remix init
-  git init # if you haven't already
-  git add .
-  git commit -m "Initialize project"
-  ```
 
 - Start the Postgres Database in [Docker](https://www.docker.com/get-started):
 
@@ -111,8 +103,8 @@ Prior to your first deployment, you'll need to do a few things:
 - Create two apps on Fly, one for staging and one for production:
 
   ```sh
-  fly apps create blues-stack-template
-  fly apps create blues-stack-template-staging
+  fly apps create community-lending-library-5105
+  fly apps create community-lending-library-5105-staging
   ```
 
   > **Note:** Once you've successfully created an app, double-check the `fly.toml` file to ensure that the `app` key is the name of the production app you created. This Stack [automatically appends a unique suffix at init](https://github.com/remix-run/blues-stack/blob/4c2f1af416b539187beb8126dd16f6bc38f47639/remix.init/index.js#L29) which may not match the apps you created on Fly. You will likely see [404 errors in your Github Actions CI logs](https://community.fly.io/t/404-failure-with-deployment-with-remix-blues-stack/4526/3) if you have this mismatch.
@@ -134,14 +126,14 @@ Prior to your first deployment, you'll need to do a few things:
 - Add a `SESSION_SECRET` to your fly app secrets, to do this you can run the following commands:
 
   ```sh
-  fly secrets set SESSION_SECRET=$(openssl rand -hex 32) --app blues-stack-template
-  fly secrets set SESSION_SECRET=$(openssl rand -hex 32) --app blues-stack-template-staging
+  fly secrets set SESSION_SECRET=$(openssl rand -hex 32) --app community-lending-library-5105
+  fly secrets set SESSION_SECRET=$(openssl rand -hex 32) --app community-lending-library-5105-staging
   ```
 
   > **Note:** When creating the staging secret, you may get a warning from the Fly CLI that looks like this:
   >
   > ```
-  > WARN app flag 'blues-stack-template-staging' does not match app name in config file 'blues-stack-template'
+  > WARN app flag 'community-lending-library-5105-staging' does not match app name in config file 'community-lending-library-5105'
   > ```
   >
   > This simply means that the current directory contains a config that references the production app we created in the first step. Ignore this warning and proceed to create the secret.
@@ -151,11 +143,11 @@ Prior to your first deployment, you'll need to do a few things:
 - Create a database for both your staging and production environments. Run the following:
 
   ```sh
-  fly postgres create --name blues-stack-template-db
-  fly postgres attach --app blues-stack-template blues-stack-template-db
+  fly postgres create --name community-lending-library-5105-db
+  fly postgres attach --app community-lending-library-5105 community-lending-library-5105-db
 
-  fly postgres create --name blues-stack-template-staging-db
-  fly postgres attach --app blues-stack-template-staging blues-stack-template-staging-db
+  fly postgres create --name community-lending-library-5105-staging-db
+  fly postgres attach --app community-lending-library-5105-staging community-lending-library-5105-staging-db
   ```
 
   > **Note:** You'll get the same warning for the same reason when attaching the staging database that you did in the `fly set secret` step above. No worries. Proceed!
