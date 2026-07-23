@@ -1,0 +1,14 @@
+import { index, route, type RouteConfig } from "@remix-run/route-config";
+
+export default [
+  index("routes/_index.tsx"),
+  route("healthcheck", "routes/healthcheck.tsx"),
+  route("join", "routes/join.tsx"),
+  route("login", "routes/login.tsx"),
+  route("logout", "routes/logout.tsx"),
+  route("notes", "routes/notes.tsx", [
+    index("routes/notes._index.tsx"),
+    route("new", "routes/notes.new.tsx"),
+    route(":noteId", "routes/notes.$noteId.tsx"),
+  ]),
+] satisfies RouteConfig;
