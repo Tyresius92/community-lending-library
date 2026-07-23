@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { json, redirect } from "@remix-run/node";
+import { data, redirect } from "@remix-run/node";
 import {
   Form,
   isRouteErrorResponse,
@@ -19,7 +19,7 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
   if (!note) {
     throw new Response("Not Found", { status: 404 });
   }
-  return json({ note });
+  return data({ note });
 };
 
 export const action = async ({ params, request }: ActionFunctionArgs) => {
