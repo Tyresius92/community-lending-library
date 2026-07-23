@@ -1,5 +1,7 @@
 node_modules
 
+.react-router/
+
 /build
 /public/build
 .env
