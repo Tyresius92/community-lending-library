@@ -39,6 +39,17 @@ declare global {
        *    cy.visitAndCheck('/', 500)
        */
       visitAndCheck: typeof visitAndCheck;
+
+      /**
+       * Retrieves the magic-link URL sent to the given email address, via the
+       * mock Resend interception server in mocks/index.js.
+       *
+       * @returns {typeof getMagicLink}
+       * @memberof Chainable
+       * @example
+       *    cy.getMagicLink('whatever@example.com')
+       */
+      getMagicLink: typeof getMagicLink;
     }
   }
 }
@@ -79,6 +90,13 @@ function deleteUserByEmail(email: string) {
   cy.clearCookie("__session");
 }
 
+function getMagicLink(email: string) {
+  const inspectionPort = Number(Cypress.env("PORT") ?? 8811) + 2;
+  return cy
+    .request(`http://localhost:${inspectionPort}/__mocks/magic_link?email=${email}`)
+    .then((response) => response.body.url as string);
+}
+
 // We're waiting a second because of this issue happen randomly
 // https://github.com/cypress-io/cypress/issues/7306
 // Also added custom types to avoid getting detached
@@ -93,4 +111,5 @@ export const registerCommands = () => {
   Cypress.Commands.add("login", login);
   Cypress.Commands.add("cleanupUser", cleanupUser);
   Cypress.Commands.add("visitAndCheck", visitAndCheck);
+  Cypress.Commands.add("getMagicLink", getMagicLink);
 };

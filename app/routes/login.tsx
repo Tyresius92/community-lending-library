@@ -1,82 +1,109 @@
 import { useEffect, useRef } from "react";
-import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
-import { data, redirect , Form, Link, useActionData, useSearchParams } from "react-router";
+import type {
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
+  MetaFunction,
+} from "react-router";
+import {
+  data,
+  redirect,
+  Form,
+  useActionData,
+  useLoaderData,
+  useSearchParams,
+} from "react-router";
 
-import { verifyLogin } from "~/models/user.server";
-import { createUserSession, getUserId } from "~/session.server";
+import { MagicLinkEmail } from "~/emails/magic_link_email";
+import { sendEmail } from "~/mailer.server";
+import { createMagicLinkToken } from "~/models/magic_link.server";
+import { findOrCreateUserByEmail } from "~/models/user.server";
+import { getUserId } from "~/session.server";
 import { safeRedirect, validateEmail } from "~/utils";
+import { getClientIp, isRateLimited } from "~/utils/rate_limit.server";
+
+const MAGIC_LINK_ERROR_MESSAGES: Record<string, string> = {
+  invalid: "That link isn't valid. Enter your email to get a new one.",
+  expired: "That link has expired. Enter your email to get a new one.",
+  used: "That link was already used. Enter your email to get a new one.",
+};
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const userId = await getUserId(request);
   if (userId) return redirect("/");
-  return data({});
+
+  const magicLinkError = new URL(request.url).searchParams.get(
+    "magicLinkError",
+  );
+  return data({
+    magicLinkErrorMessage: magicLinkError
+      ? (MAGIC_LINK_ERROR_MESSAGES[magicLinkError] ?? null)
+      : null,
+  });
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
   const email = formData.get("email");
-  const password = formData.get("password");
-  const redirectTo = safeRedirect(formData.get("redirectTo"), "/");
-  const remember = formData.get("remember");
+  const redirectTo = safeRedirect(formData.get("redirectTo"), "/notes");
 
   if (!validateEmail(email)) {
     return data(
-      { errors: { email: "Email is invalid", password: null } },
+      { ok: false, email: null, errors: { email: "Email is invalid" } },
       { status: 400 },
     );
   }
 
-  if (typeof password !== "string" || password.length === 0) {
-    return data(
-      { errors: { email: null, password: "Password is required" } },
-      { status: 400 },
-    );
+  if (isRateLimited(`login:${getClientIp(request)}`)) {
+    return data({ ok: true, email, errors: { email: null } });
   }
 
-  if (password.length < 8) {
-    return data(
-      { errors: { email: null, password: "Password is too short" } },
-      { status: 400 },
-    );
+  const user = await findOrCreateUserByEmail(email);
+  const token = await createMagicLinkToken(user.id);
+
+  const magicLinkUrl = new URL("/magic_link", new URL(request.url).origin);
+  magicLinkUrl.searchParams.set("token", token);
+  magicLinkUrl.searchParams.set("redirectTo", redirectTo);
+
+  if (process.env.NODE_ENV === "development") {
+    console.log(magicLinkUrl);
   }
 
-  const user = await verifyLogin(email, password);
-
-  if (!user) {
-    return data(
-      { errors: { email: "Invalid email or password", password: null } },
-      { status: 400 },
-    );
-  }
-
-  return createUserSession({
-    redirectTo,
-    remember: remember === "on" ? true : false,
-    request,
-    userId: user.id,
+  await sendEmail({
+    to: email,
+    subject: "Your login link",
+    react: <MagicLinkEmail magicLinkUrl={magicLinkUrl.toString()} />,
   });
+
+  return data({ ok: true, email, errors: { email: null } });
 };
 
-export const meta: MetaFunction = () => [{ title: "Login" }];
+export const meta: MetaFunction = () => [{ title: "Log in" }];
 
 export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") || "/notes";
+  const { magicLinkErrorMessage } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const emailRef = useRef<HTMLInputElement>(null);
-  const passwordRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (actionData?.errors?.email) {
       emailRef.current?.focus();
-    } else if (actionData?.errors?.password) {
-      passwordRef.current?.focus();
     }
   }, [actionData]);
+
+  if (actionData?.ok) {
+    return (
+      <div>
+        <p>Check your email — we sent a login link to {actionData.email}.</p>
+      </div>
+    );
+  }
 
   return (
     <div>
       <div>
+        {magicLinkErrorMessage ? <div>{magicLinkErrorMessage}</div> : null}
         <Form method="post">
           <div>
             <label htmlFor="email">Email address</label>
@@ -99,43 +126,8 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div>
-            <label htmlFor="password">Password</label>
-            <div>
-              <input
-                id="password"
-                ref={passwordRef}
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                aria-invalid={actionData?.errors?.password ? true : undefined}
-                aria-describedby="password-error"
-              />
-              {actionData?.errors?.password ? (
-                <div id="password-error">{actionData.errors.password}</div>
-              ) : null}
-            </div>
-          </div>
-
           <input type="hidden" name="redirectTo" value={redirectTo} />
-          <button type="submit">Log in</button>
-          <div>
-            <div>
-              <input id="remember" name="remember" type="checkbox" />
-              <label htmlFor="remember">Remember me</label>
-            </div>
-            <div>
-              Don&apos;t have an account?{" "}
-              <Link
-                to={{
-                  pathname: "/join",
-                  search: searchParams.toString(),
-                }}
-              >
-                Sign up
-              </Link>
-            </div>
-          </div>
+          <button type="submit">Send login link</button>
         </Form>
       </div>
     </div>

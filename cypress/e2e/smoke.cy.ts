@@ -5,21 +5,22 @@ describe("smoke tests", () => {
     cy.cleanupUser();
   });
 
-  it("should allow you to register and login", () => {
-    const loginForm = {
-      email: `${faker.internet.userName()}@example.com`,
-      password: faker.internet.password(),
-    };
-    cy.then(() => ({ email: loginForm.email })).as("user");
+  it("should allow you to log in via a magic link", () => {
+    const email = `${faker.internet.userName()}@example.com`;
+    cy.then(() => ({ email })).as("user");
 
     cy.visitAndCheck("/");
-    cy.findByRole("link", { name: /sign up/i }).click();
+    cy.findByRole("link", { name: /log in/i }).click();
 
-    cy.findByRole("textbox", { name: /email/i }).type(loginForm.email);
-    cy.findByLabelText(/password/i).type(loginForm.password);
-    cy.findByRole("button", { name: /create account/i }).click();
+    cy.findByRole("textbox", { name: /email/i }).type(email);
+    cy.findByRole("button", { name: /send login link/i }).click();
+    cy.findByText(/check your email/i);
 
-    cy.findByRole("link", { name: /notes/i }).click();
+    cy.getMagicLink(email).then((url) => {
+      cy.visit(url);
+    });
+    cy.location("pathname").should("contain", "/notes");
+
     cy.findByRole("button", { name: /logout/i }).click();
     cy.findByRole("link", { name: /log in/i });
   });

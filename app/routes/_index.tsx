@@ -14,8 +14,7 @@ export default function Index() {
           <Link to="/notes">View Notes for {user.email}</Link>
         ) : (
           <div>
-            <Link to="/join">Sign up</Link>
-            <Link to="/login">Log In</Link>
+            <Link to="/login">Log in</Link>
           </div>
         )}
       </div>

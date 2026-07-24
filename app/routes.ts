@@ -5,6 +5,7 @@ export default [
   route("healthcheck", "routes/healthcheck.tsx"),
   route("join", "routes/join.tsx"),
   route("login", "routes/login.tsx"),
+  route("magic_link", "routes/magic_link.tsx"),
   route("logout", "routes/logout.tsx"),
   route("notes", "routes/notes.tsx", [
     index("routes/notes._index.tsx"),
