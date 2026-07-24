@@ -11,11 +11,20 @@ model User {
   id    String @id @default(cuid())
   email String @unique
 
+  completedLoanCount Int @default(0)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   notes      Note[]
   magicLinks MagicLink[]
+
+  memberships      CommunityMembership[]
+  ownedCommunities Community[]           @relation("CommunityOwner")
+  loansAsBorrower  Loan[]                @relation("LoanBorrower")
+  loansAsOwner     Loan[]                @relation("LoanOwner")
+  messagesSent     Message[]
+  inviteTokensSent InviteToken[]
 }
 
 model MagicLink {
@@ -39,4 +48,190 @@ model Note {
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId String
+}
+
+enum CommunityVisibility {
+  public
+  private
+}
+
+enum CommunityJoinPolicy {
+  open
+  invite_only
+}
+
+enum CommunityRole {
+  owner
+  admin
+  member
+}
+
+enum RealNamePolicy {
+  not_allowed
+  optional
+  required
+}
+
+enum LoanStatus {
+  pending
+  accepted
+  active
+  completed
+  declined
+  cancelled
+  expired
+}
+
+enum LoanCancelledBy {
+  borrower
+  owner
+}
+
+model Community {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+
+  visibility CommunityVisibility @default(private)
+  joinPolicy CommunityJoinPolicy @default(invite_only)
+
+  owner   User   @relation("CommunityOwner", fields: [ownerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  ownerId String
+
+  includeGlobalHistoryForNewMembers Boolean @default(false)
+
+  realNamePolicy           RealNamePolicy @default(optional)
+  realNameVisibleByDefault Boolean        @default(false)
+
+  archivedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships  CommunityMembership[]
+  items        Item[]
+  loans        Loan[]
+  inviteTokens InviteToken[]
+}
+
+model CommunityMembership {
+  id String @id @default(cuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId String
+
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  communityId String
+
+  role CommunityRole @default(member)
+
+  displayName           String
+  realName              String?
+  shareRealNameOverride Boolean @default(false)
+
+  completedLoanCount Int @default(0)
+
+  joinedAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  itemsOwned Item[]
+
+  @@unique([userId, communityId])
+  @@index([communityId, role])
+}
+
+model Item {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+
+  ownerMembership   CommunityMembership @relation(fields: [ownerMembershipId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  ownerMembershipId String
+
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  communityId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  loans Loan[]
+
+  @@index([communityId])
+  @@index([ownerMembershipId])
+}
+
+model Loan {
+  id String @id @default(cuid())
+
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  itemId String
+
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  communityId String
+
+  borrower   User   @relation("LoanBorrower", fields: [borrowerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  borrowerId String
+
+  owner   User   @relation("LoanOwner", fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  ownerId String
+
+  status LoanStatus @default(pending)
+
+  requestedDurationDays Int?
+
+  expiresAt DateTime
+
+  acceptedAt      DateTime?
+  declinedAt      DateTime?
+  cancelledAt     DateTime?
+  cancelledByRole LoanCancelledBy?
+
+  checkedOutAt DateTime?
+
+  ownerConfirmedReturnAt    DateTime?
+  borrowerConfirmedReturnAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages Message[]
+
+  @@index([itemId, status])
+  @@index([borrowerId, status])
+  @@index([ownerId, status])
+  @@index([status, expiresAt])
+}
+
+model Message {
+  id String @id @default(cuid())
+
+  loan   Loan   @relation(fields: [loanId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  loanId String
+
+  sender   User   @relation(fields: [senderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  senderId String
+
+  body String
+
+  createdAt DateTime @default(now())
+
+  @@index([loanId, createdAt])
+}
+
+model InviteToken {
+  id        String @id @default(cuid())
+  tokenHash String @unique
+
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  communityId String
+
+  createdBy       User   @relation(fields: [createdByUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdByUserId String
+
+  createdAt DateTime @default(now())
+
+  @@index([communityId])
 }
