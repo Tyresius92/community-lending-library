@@ -1,5 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 import invariant from "tiny-invariant";
+
+import { PrismaClient } from "~/generated/prisma/client";
 
 import { singleton } from "./singleton.server";
 
@@ -16,7 +18,10 @@ function getPrismaClient() {
   // that this only runs once per server restart and won't automatically be
   // re-run per request like everything else is. So if you need to change
   // something in this file, you'll need to manually restart the server.
-  const client = new PrismaClient();
+  const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_POOLER_URL,
+  });
+  const client = new PrismaClient({ adapter });
   // connect eagerly
   client.$connect();
 
