@@ -37,7 +37,9 @@ export async function getUser(request: Request) {
   if (userId === undefined) return null;
 
   const user = await getUserById(userId);
-  if (user) return user;
+  if (user) {
+    return user;
+  }
 
   throw await logout(request);
 }
