@@ -65,7 +65,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   magicLinkUrl.searchParams.set("redirectTo", redirectTo);
 
   if (process.env.NODE_ENV === "development") {
-    console.log(magicLinkUrl);
+    console.log(magicLinkUrl.toString());
   }
 
   await sendEmail({
