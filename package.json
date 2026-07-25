@@ -31,7 +31,7 @@
     "@react-router/serve": "8.3.0",
     "cross-env": "7.0.3",
     "isbot": "5.2.1",
-    "prisma": "5.22.0",
+    "prisma": "7.9.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-email": "6.9.1",
