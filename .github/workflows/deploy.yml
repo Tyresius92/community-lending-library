@@ -76,8 +76,8 @@ jobs:
       - name: ⚡ Run vitest
         run: npm run test -- --coverage
 
-  cypress:
-    name: ⚫️ Cypress
+  playwright:
+    name: 🎭 Playwright
     runs-on: ubuntu-latest
     steps:
       - name: ⬇️ Checkout repo
@@ -96,6 +96,9 @@ jobs:
       - name: 📥 Install deps
         run: npm install
 
+      - name: 🎭 Install Playwright browsers
+        run: npx playwright install --with-deps
+
       - name: 🐳 Docker compose
         # the sleep is just there to give time for postgres to get started
         run: docker compose up -d && sleep 3
@@ -105,21 +108,13 @@ jobs:
       - name: 🛠 Setup Database
         run: npx prisma migrate reset --force
 
-      - name: ⚙️ Build
-        run: npm run build
-
-      - name: 🌳 Cypress run
-        uses: cypress-io/github-action@v6
-        with:
-          start: npm run start:mocks
-          wait-on: http://localhost:8811
-        env:
-          PORT: 8811
+      - name: 🌳 Playwright run
+        run: npx playwright test
 
   deploy:
     name: 🚀 Deploy
     runs-on: ubuntu-latest
-    needs: [lint, typecheck, vitest, cypress]
+    needs: [lint, typecheck, vitest, playwright]
     # only deploy main/dev branch on pushes
     if: ${{ (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev') && github.event_name == 'push' }}
 
