@@ -27,7 +27,7 @@ const server = setupServer(...miscHandlers, resendHandler);
 server.listen({ onUnhandledRequest: "bypass" });
 console.info("🔶 Mock server running");
 
-// Tiny inspection server so Cypress can retrieve the magic-link URL from the
+// Tiny inspection server so e2e tests can retrieve the magic-link URL from the
 // most recently "sent" email, since real emails never reach an inbox in tests.
 const inspectionPort = Number(process.env.PORT ?? 8811) + 2;
 
