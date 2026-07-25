@@ -13,6 +13,8 @@ FROM base as deps
 WORKDIR /myapp
 
 ADD package.json package-lock.json .npmrc ./
+ADD prisma ./prisma
+ADD prisma.config.ts .
 RUN npm install --include=dev
 
 # Setup production node_modules
