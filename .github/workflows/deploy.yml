@@ -104,6 +104,12 @@ jobs:
         env:
           DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
 
+      - name: 🩺 Dump Postgres diagnostics on failure
+        if: always()
+        run: |
+          docker inspect --format='{{json .State.Health}}' $(docker compose ps -q postgres) || true
+          docker compose logs postgres || true
+
       - name: 🛠 Setup Database
         run: npx prisma migrate reset --force
 
