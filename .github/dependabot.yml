@@ -5,8 +5,13 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    target-branch: dev
     open-pull-requests-limit: 10
     groups:
+      react-router:
+        patterns:
+          - "react-router"
+          - "@react-router/*"
       minor-and-patch:
         update-types:
           - "minor"
@@ -17,6 +22,7 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    target-branch: dev
     open-pull-requests-limit: 10
     groups:
       minor-and-patch:
