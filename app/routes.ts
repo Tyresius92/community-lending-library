@@ -7,6 +7,15 @@ export default [
   route("login", "routes/login/login.tsx"),
   route("magic_link", "routes/magic_link/magic_link.tsx"),
   route("logout", "routes/logout/logout.tsx"),
+  route("communities", "routes/communities/communities.layout.tsx", [
+    index("routes/communities/communities.tsx"),
+    route("new", "routes/communities/new/new.tsx"),
+    route(
+      ":communitySlug",
+      "routes/communities/$communitySlug/$communitySlug.layout.tsx",
+      [index("routes/communities/$communitySlug/$communitySlug.tsx")],
+    ),
+  ]),
   route("notes", "routes/notes/notes.layout.tsx", [
     index("routes/notes/notes.tsx"),
     route("new", "routes/notes/new/new.tsx"),

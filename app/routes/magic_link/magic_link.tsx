@@ -8,7 +8,7 @@ import { safeRedirect } from "~/utils";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
   const token = url.searchParams.get("token");
-  const redirectTo = safeRedirect(url.searchParams.get("redirectTo"), "/notes");
+  const redirectTo = safeRedirect(url.searchParams.get("redirectTo"), "/communities");
 
   if (!token) {
     return redirect("/login");
