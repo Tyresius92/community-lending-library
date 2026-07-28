@@ -18,7 +18,9 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   return { communities: memberships.map((m) => m.community) };
 };
 
-export default function CommunitiesLayout({ loaderData }: Route.ComponentProps) {
+export default function CommunitiesLayout({
+  loaderData,
+}: Route.ComponentProps) {
   const { communities } = loaderData;
 
   return (
@@ -27,7 +29,9 @@ export default function CommunitiesLayout({ loaderData }: Route.ComponentProps) 
         <ul>
           {communities.map((community) => (
             <li key={community.id}>
-              <Link to={`/communities/${community.slug}`}>{community.name}</Link>
+              <Link to={`/communities/${community.slug}`}>
+                {community.name}
+              </Link>
             </li>
           ))}
         </ul>

@@ -2,7 +2,9 @@ import { expect, test } from "@playwright/test";
 
 import { loginAsNewUser } from "./helpers/session";
 
-test("a user can create a community and another user can join it", async ({ browser }) => {
+test("a user can create a community and another user can join it", async ({
+  browser,
+}) => {
   const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const ownerEmail = `owner-${suffix}@example.com`;
   const joinerEmail = `joiner-${suffix}@example.com`;
@@ -31,7 +33,9 @@ test("a user can create a community and another user can join it", async ({ brow
 
   await joinerPage.getByLabel("Display name").fill("Joiner Person");
   await joinerPage.getByRole("button", { name: "Join community" }).click();
-  await expect(joinerPage.getByText(/You.?re a member as Joiner Person/)).toBeVisible();
+  await expect(
+    joinerPage.getByText(/You.?re a member as Joiner Person/),
+  ).toBeVisible();
 
   await ownerPage.reload();
   await expect(ownerPage.getByText("Joiner Person (member)")).toBeVisible();

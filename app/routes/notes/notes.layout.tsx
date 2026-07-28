@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs } from "react-router";
-import { data , Form, Link, NavLink, Outlet, useLoaderData } from "react-router";
+import { data, Form, Link, NavLink, Outlet, useLoaderData } from "react-router";
 
 import { getNoteListItems } from "~/models/note.server";
 import { requireUserId } from "~/session.server";

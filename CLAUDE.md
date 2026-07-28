@@ -86,6 +86,7 @@ See the live (non-hypothetical) version of this in [app/routes.ts](app/routes.ts
 **Env vars** (see `.env.example`): `DATABASE_POOLER_URL` (used at request time by the app), `DATABASE_DIRECT_URL` (used by Prisma CLI for migrations — see `prisma.config.ts`), `SESSION_SECRET`, `RESEND_API_KEY`, `FROM_EMAIL`. Separate `.env.staging` / `.env.production` files exist alongside `.env`.
 
 **Testing**:
+
 - Vitest (`vitest.config.ts`) runs `*.test.*` files colocated under `app/`, `happy-dom` environment, globals on, setup in `test/setup-test-env.ts`.
 - Playwright e2e specs live in `tests/` (not colocated with `app/`), config in `playwright.config.ts`, runs against chromium/firefox/webkit.
 - MSW (`mocks/`) is available for stubbing third-party HTTP in tests/dev; see `mocks/README.md`.

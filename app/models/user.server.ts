@@ -1,7 +1,6 @@
 import { prisma } from "~/db.server";
 import type { User } from "~/generated/prisma/client";
 
-
 export type { User } from "~/generated/prisma/client";
 
 export async function getUserById(id: User["id"]) {

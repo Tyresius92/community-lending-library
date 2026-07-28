@@ -4,7 +4,10 @@ import { Checkbox } from "./checkbox";
 
 test("associates the label with the checkbox", () => {
   render(<Checkbox label="Subscribe" name="subscribe" />);
-  expect(screen.getByLabelText("Subscribe")).toHaveAttribute("type", "checkbox");
+  expect(screen.getByLabelText("Subscribe")).toHaveAttribute(
+    "type",
+    "checkbox",
+  );
 });
 
 test("respects defaultChecked", () => {

@@ -9,13 +9,20 @@ test("associates the label with the textarea", () => {
 });
 
 test("shows hint text", () => {
-  render(<TextArea label="Description" name="description" hintText="Optional" />);
+  render(
+    <TextArea label="Description" name="description" hintText="Optional" />,
+  );
   expect(screen.getByText("Optional")).toBeInTheDocument();
 });
 
 test("shows an error message and marks the textarea invalid", () => {
-  render(<TextArea label="Description" name="description" errorMessage="Too long" />);
-  expect(screen.getByLabelText("Description")).toHaveAttribute("aria-invalid", "true");
+  render(
+    <TextArea label="Description" name="description" errorMessage="Too long" />,
+  );
+  expect(screen.getByLabelText("Description")).toHaveAttribute(
+    "aria-invalid",
+    "true",
+  );
   expect(screen.getByRole("alert")).toHaveTextContent("Too long");
 });
 

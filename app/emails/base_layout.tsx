@@ -1,5 +1,15 @@
 import type { ReactNode } from "react";
-import { Body, Container, Head, Heading, Hr, Html, Preview, Section, Text } from "react-email";
+import {
+  Body,
+  Container,
+  Head,
+  Heading,
+  Hr,
+  Html,
+  Preview,
+  Section,
+  Text,
+} from "react-email";
 
 interface BaseLayoutProps {
   preview: string;

@@ -20,11 +20,16 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   const memberOf = new Set(memberships.map((m) => m.communityId));
 
   return {
-    communities: communities.map((c) => ({ ...c, isMember: memberOf.has(c.id) })),
+    communities: communities.map((c) => ({
+      ...c,
+      isMember: memberOf.has(c.id),
+    })),
   };
 };
 
-export default function CommunitiesDirectory({ loaderData }: Route.ComponentProps) {
+export default function CommunitiesDirectory({
+  loaderData,
+}: Route.ComponentProps) {
   const { communities } = loaderData;
 
   return (
@@ -35,7 +40,9 @@ export default function CommunitiesDirectory({ loaderData }: Route.ComponentProp
         {communities.map((community) => (
           <li key={community.id}>
             <h2>
-              <Link to={`/communities/${community.slug}`}>{community.name}</Link>
+              <Link to={`/communities/${community.slug}`}>
+                {community.name}
+              </Link>
             </h2>
             {community.description ? <p>{community.description}</p> : null}
             {community.isMember ? <p>Already a member.</p> : null}

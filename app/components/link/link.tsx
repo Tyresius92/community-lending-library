@@ -2,7 +2,10 @@ import type { ReactNode } from "react";
 import type { LinkProps as RRLinkProps } from "react-router";
 import { Link as RRLink } from "react-router";
 
-type InternalLinkProps = Pick<RRLinkProps, "to" | "children" | "reloadDocument">;
+type InternalLinkProps = Pick<
+  RRLinkProps,
+  "to" | "children" | "reloadDocument"
+>;
 
 interface ExternalLinkProps {
   href: URL;

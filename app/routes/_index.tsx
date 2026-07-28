@@ -3,7 +3,9 @@ import type { MetaFunction } from "react-router";
 import { Link } from "~/components/link/link";
 import { useOptionalUser } from "~/utils";
 
-export const meta: MetaFunction = () => [{ title: "Community Lending Library" }];
+export const meta: MetaFunction = () => [
+  { title: "Community Lending Library" },
+];
 
 export default function Index() {
   const user = useOptionalUser();

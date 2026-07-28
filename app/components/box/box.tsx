@@ -1,6 +1,7 @@
 import type { HTMLAttributes, ReactNode } from "react";
 
-export interface BoxProps extends Pick<HTMLAttributes<HTMLElement>, "id" | "role"> {
+export interface BoxProps
+  extends Pick<HTMLAttributes<HTMLElement>, "id" | "role"> {
   children?: ReactNode;
   is?: "div" | "article" | "section";
 }

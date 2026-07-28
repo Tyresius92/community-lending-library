@@ -1,5 +1,12 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { data, redirect , Form, isRouteErrorResponse, useLoaderData, useRouteError } from "react-router";
+import {
+  data,
+  redirect,
+  Form,
+  isRouteErrorResponse,
+  useLoaderData,
+  useRouteError,
+} from "react-router";
 import invariant from "tiny-invariant";
 
 import { deleteNote, getNote } from "~/models/note.server";

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { ActionFunctionArgs } from "react-router";
-import { data, redirect , Form, useActionData } from "react-router";
+import { data, redirect, Form, useActionData } from "react-router";
 
 import { createNote } from "~/models/note.server";
 import { requireUserId } from "~/session.server";

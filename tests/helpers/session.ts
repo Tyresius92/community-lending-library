@@ -20,9 +20,7 @@ export async function loginAsNewUser(context: BrowserContext, email: string) {
   }
   const [name, value] = setCookie.split(";")[0].split("=");
 
-  await context.addCookies([
-    { name, value, domain: "localhost", path: "/" },
-  ]);
+  await context.addCookies([{ name, value, domain: "localhost", path: "/" }]);
 
   return user;
 }

@@ -1,5 +1,12 @@
 import type { LinksFunction } from "react-router";
-import { Form, Links, Meta, Outlet, ScrollRestoration, Scripts } from "react-router";
+import {
+  Form,
+  Links,
+  Meta,
+  Outlet,
+  ScrollRestoration,
+  Scripts,
+} from "react-router";
 
 import { Button } from "~/components/button/button";
 import { getUser } from "~/session.server";

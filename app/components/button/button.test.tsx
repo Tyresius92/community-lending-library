@@ -15,7 +15,10 @@ test("defaults to the primary variant", () => {
 
 test("applies the secondary variant", () => {
   render(<Button variant="secondary">Cancel</Button>);
-  expect(screen.getByRole("button")).toHaveAttribute("data-variant", "secondary");
+  expect(screen.getByRole("button")).toHaveAttribute(
+    "data-variant",
+    "secondary",
+  );
 });
 
 test("is disabled when the disabled prop is set", () => {
@@ -37,5 +40,8 @@ test("forwards the type prop", () => {
 
 test("forwards the aria-describedby prop", () => {
   render(<Button aria-describedby="hint-id">Submit</Button>);
-  expect(screen.getByRole("button")).toHaveAttribute("aria-describedby", "hint-id");
+  expect(screen.getByRole("button")).toHaveAttribute(
+    "aria-describedby",
+    "hint-id",
+  );
 });

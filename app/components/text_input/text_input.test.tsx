@@ -9,12 +9,26 @@ test("associates the label with the input", () => {
 });
 
 test("shows hint text", () => {
-  render(<TextInput label="Slug" name="slug" type="text" hintText="Lowercase only" />);
+  render(
+    <TextInput
+      label="Slug"
+      name="slug"
+      type="text"
+      hintText="Lowercase only"
+    />,
+  );
   expect(screen.getByText("Lowercase only")).toBeInTheDocument();
 });
 
 test("shows an error message and marks the input invalid", () => {
-  render(<TextInput label="Name" name="name" type="text" errorMessage="Name is required" />);
+  render(
+    <TextInput
+      label="Name"
+      name="name"
+      type="text"
+      errorMessage="Name is required"
+    />,
+  );
   const input = screen.getByLabelText("Name");
   expect(input).toHaveAttribute("aria-invalid", "true");
   expect(screen.getByRole("alert")).toHaveTextContent("Name is required");

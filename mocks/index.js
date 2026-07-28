@@ -44,7 +44,9 @@ const inspectionServer = http.createServer((req, res) => {
     .reverse()
     .find((sent) => sent.to === email || sent.to?.[0] === email);
 
-  const urlMatch = match?.html?.match(/https?:\/\/[^\s"]+\/magic_link\?[^\s"]+/);
+  const urlMatch = match?.html?.match(
+    /https?:\/\/[^\s"]+\/magic_link\?[^\s"]+/,
+  );
 
   res.setHeader("Content-Type", "application/json");
   if (urlMatch) {

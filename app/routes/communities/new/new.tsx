@@ -8,7 +8,12 @@ import { TextInput } from "~/components/text_input/text_input";
 import { prisma } from "~/db.server";
 import { Prisma } from "~/generated/prisma/client";
 import { requireUserId } from "~/session.server";
-import { SLUG_PATTERN, suggestDisplayNameFromEmail, useUser, validateSlug } from "~/utils";
+import {
+  SLUG_PATTERN,
+  suggestDisplayNameFromEmail,
+  useUser,
+  validateSlug,
+} from "~/utils";
 
 import type { Route } from "./+types/new";
 
@@ -24,12 +29,17 @@ export const action = async ({ request }: Route.ActionArgs) => {
   const name = formData.get("name");
   const slug = formData.get("slug");
   const description = formData.get("description");
-  const visibility = formData.get("visibility") === "private" ? "private" : "public";
-  const joinPolicy = formData.get("joinPolicy") === "invite_only" ? "invite_only" : "open";
+  const visibility =
+    formData.get("visibility") === "private" ? "private" : "public";
+  const joinPolicy =
+    formData.get("joinPolicy") === "invite_only" ? "invite_only" : "open";
   const displayName = formData.get("displayName");
 
   const errors = {
-    name: typeof name !== "string" || name.trim().length === 0 ? "Name is required" : null,
+    name:
+      typeof name !== "string" || name.trim().length === 0
+        ? "Name is required"
+        : null,
     slug: validateSlug(slug)
       ? null
       : "Slug must be lowercase letters, numbers, and hyphens (3–50 characters)",
@@ -53,15 +63,29 @@ export const action = async ({ request }: Route.ActionArgs) => {
 
   if (trimmedSlug === "new") {
     return data(
-      { errors: { name: null, slug: "That URL is already taken. Try another.", displayName: null } },
+      {
+        errors: {
+          name: null,
+          slug: "That URL is already taken. Try another.",
+          displayName: null,
+        },
+      },
       { status: 400 },
     );
   }
 
-  const existing = await prisma.community.findUnique({ where: { slug: trimmedSlug } });
+  const existing = await prisma.community.findUnique({
+    where: { slug: trimmedSlug },
+  });
   if (existing) {
     return data(
-      { errors: { name: null, slug: "That URL is already taken. Try another.", displayName: null } },
+      {
+        errors: {
+          name: null,
+          slug: "That URL is already taken. Try another.",
+          displayName: null,
+        },
+      },
       { status: 400 },
     );
   }
@@ -76,16 +100,31 @@ export const action = async ({ request }: Route.ActionArgs) => {
         joinPolicy,
         owner: { connect: { id: userId } },
         memberships: {
-          create: [{ user: { connect: { id: userId } }, role: "owner", displayName: trimmedDisplayName }],
+          create: [
+            {
+              user: { connect: { id: userId } },
+              role: "owner",
+              displayName: trimmedDisplayName,
+            },
+          ],
         },
       },
     });
 
     return redirect(`/communities/${community.slug}`);
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
       return data(
-        { errors: { name: null, slug: "That URL is already taken. Try another.", displayName: null } },
+        {
+          errors: {
+            name: null,
+            slug: "That URL is already taken. Try another.",
+            displayName: null,
+          },
+        },
         { status: 400 },
       );
     }

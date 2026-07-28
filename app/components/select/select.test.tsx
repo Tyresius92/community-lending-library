@@ -19,13 +19,25 @@ test("renders each option plus a placeholder", () => {
 });
 
 test("respects the default value", () => {
-  render(<Select label="Choice" name="choice" options={options} defaultValue="b" />);
+  render(
+    <Select label="Choice" name="choice" options={options} defaultValue="b" />,
+  );
   expect(screen.getByLabelText("Choice")).toHaveValue("b");
 });
 
 test("shows an error message and marks the select invalid", () => {
-  render(<Select label="Choice" name="choice" options={options} errorMessage="Required" />);
-  expect(screen.getByLabelText("Choice")).toHaveAttribute("aria-invalid", "true");
+  render(
+    <Select
+      label="Choice"
+      name="choice"
+      options={options}
+      errorMessage="Required"
+    />,
+  );
+  expect(screen.getByLabelText("Choice")).toHaveAttribute(
+    "aria-invalid",
+    "true",
+  );
   expect(screen.getByRole("alert")).toHaveTextContent("Required");
 });
 
