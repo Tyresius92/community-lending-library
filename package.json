@@ -9,6 +9,7 @@
     "start": "react-router-serve ./build/server/index.js",
     "docker": "docker compose up -d",
     "format": "prettier --write .",
+    "generate:colors": "tsx scripts/generate_colors.ts",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
     "lint:fix": "eslint --fix --cache --cache-location ./node_modules/.cache/eslint .",
     "postinstall": "prisma generate",
@@ -16,7 +17,7 @@
     "start:mocks": "cross-env NODE_ENV=production NODE_OPTIONS=\"--require ./mocks --require dotenv/config\" react-router-serve ./build/server/index.js",
     "test": "vitest",
     "test:e2e:run": "npx playwright test",
-    "typecheck": "tsc",
+    "typecheck": "react-router typegen && tsc",
     "validate": "npm-run-all --parallel \"test -- --run\" lint typecheck test:e2e:run"
   },
   "eslintIgnore": [

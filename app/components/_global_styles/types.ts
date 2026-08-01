@@ -1,4 +1,4 @@
-import type { colors } from "./colors";
+import type { alphaColors, colors } from "./colors";
 
 export type FontSizeOption =
   | 12
@@ -52,6 +52,7 @@ export type SpaceOption =
   | 384;
 
 export type ColorOption = keyof typeof colors;
+export type AlphaColorOption = keyof typeof alphaColors;
 
 export interface StrokeValue {
   color: ColorOption;
