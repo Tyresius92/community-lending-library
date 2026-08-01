@@ -1,0 +1,196 @@
+/* Resets all spacing custom properties on every element that carries this class.
+ * This blocks CSS custom property inheritance, preventing a parent's --box-*
+ * variables from leaking into descendant boxes.
+ * Inline styles (higher specificity) override these resets when props are set. */
+.box {
+  --box-pl-xs: initial;
+  --box-pl-s: initial;
+  --box-pl-m: initial;
+  --box-pl-l: initial;
+  --box-pl-xl: initial;
+  --box-pr-xs: initial;
+  --box-pr-s: initial;
+  --box-pr-m: initial;
+  --box-pr-l: initial;
+  --box-pr-xl: initial;
+  --box-pt-xs: initial;
+  --box-pt-s: initial;
+  --box-pt-m: initial;
+  --box-pt-l: initial;
+  --box-pt-xl: initial;
+  --box-pb-xs: initial;
+  --box-pb-s: initial;
+  --box-pb-m: initial;
+  --box-pb-l: initial;
+  --box-pb-xl: initial;
+  --box-ml-xs: initial;
+  --box-ml-s: initial;
+  --box-ml-m: initial;
+  --box-ml-l: initial;
+  --box-ml-xl: initial;
+  --box-mr-xs: initial;
+  --box-mr-s: initial;
+  --box-mr-m: initial;
+  --box-mr-l: initial;
+  --box-mr-xl: initial;
+  --box-mt-xs: initial;
+  --box-mt-s: initial;
+  --box-mt-m: initial;
+  --box-mt-l: initial;
+  --box-mt-xl: initial;
+  --box-mb-xs: initial;
+  --box-mb-s: initial;
+  --box-mb-m: initial;
+  --box-mb-l: initial;
+  --box-mb-xl: initial;
+  --box-row-gap-xs: initial;
+  --box-row-gap-s: initial;
+  --box-row-gap-m: initial;
+  --box-row-gap-l: initial;
+  --box-row-gap-xl: initial;
+  --box-col-gap-xs: initial;
+  --box-col-gap-s: initial;
+  --box-col-gap-m: initial;
+  --box-col-gap-l: initial;
+  --box-col-gap-xl: initial;
+
+  padding-inline-start: var(--box-pl-xs);
+  padding-inline-end: var(--box-pr-xs);
+  padding-block-start: var(--box-pt-xs);
+  padding-block-end: var(--box-pb-xs);
+  margin-inline-start: var(--box-ml-xs);
+  margin-inline-end: var(--box-mr-xs);
+  margin-block-start: var(--box-mt-xs);
+  margin-block-end: var(--box-mb-xs);
+  row-gap: var(--box-row-gap-xs);
+  column-gap: var(--box-col-gap-xs);
+}
+
+@media (min-width: 480px) {
+  .box {
+    padding-inline-start: var(--box-pl-s, var(--box-pl-xs));
+    padding-inline-end: var(--box-pr-s, var(--box-pr-xs));
+    padding-block-start: var(--box-pt-s, var(--box-pt-xs));
+    padding-block-end: var(--box-pb-s, var(--box-pb-xs));
+    margin-inline-start: var(--box-ml-s, var(--box-ml-xs));
+    margin-inline-end: var(--box-mr-s, var(--box-mr-xs));
+    margin-block-start: var(--box-mt-s, var(--box-mt-xs));
+    margin-block-end: var(--box-mb-s, var(--box-mb-xs));
+    row-gap: var(--box-row-gap-s, var(--box-row-gap-xs));
+    column-gap: var(--box-col-gap-s, var(--box-col-gap-xs));
+  }
+}
+
+@media (min-width: 768px) {
+  .box {
+    padding-inline-start: var(--box-pl-m, var(--box-pl-s, var(--box-pl-xs)));
+    padding-inline-end: var(--box-pr-m, var(--box-pr-s, var(--box-pr-xs)));
+    padding-block-start: var(--box-pt-m, var(--box-pt-s, var(--box-pt-xs)));
+    padding-block-end: var(--box-pb-m, var(--box-pb-s, var(--box-pb-xs)));
+    margin-inline-start: var(--box-ml-m, var(--box-ml-s, var(--box-ml-xs)));
+    margin-inline-end: var(--box-mr-m, var(--box-mr-s, var(--box-mr-xs)));
+    margin-block-start: var(--box-mt-m, var(--box-mt-s, var(--box-mt-xs)));
+    margin-block-end: var(--box-mb-m, var(--box-mb-s, var(--box-mb-xs)));
+    row-gap: var(--box-row-gap-m, var(--box-row-gap-s, var(--box-row-gap-xs)));
+    column-gap: var(
+      --box-col-gap-m,
+      var(--box-col-gap-s, var(--box-col-gap-xs))
+    );
+  }
+}
+
+@media (min-width: 1024px) {
+  .box {
+    padding-inline-start: var(
+      --box-pl-l,
+      var(--box-pl-m, var(--box-pl-s, var(--box-pl-xs)))
+    );
+    padding-inline-end: var(
+      --box-pr-l,
+      var(--box-pr-m, var(--box-pr-s, var(--box-pr-xs)))
+    );
+    padding-block-start: var(
+      --box-pt-l,
+      var(--box-pt-m, var(--box-pt-s, var(--box-pt-xs)))
+    );
+    padding-block-end: var(
+      --box-pb-l,
+      var(--box-pb-m, var(--box-pb-s, var(--box-pb-xs)))
+    );
+    margin-inline-start: var(
+      --box-ml-l,
+      var(--box-ml-m, var(--box-ml-s, var(--box-ml-xs)))
+    );
+    margin-inline-end: var(
+      --box-mr-l,
+      var(--box-mr-m, var(--box-mr-s, var(--box-mr-xs)))
+    );
+    margin-block-start: var(
+      --box-mt-l,
+      var(--box-mt-m, var(--box-mt-s, var(--box-mt-xs)))
+    );
+    margin-block-end: var(
+      --box-mb-l,
+      var(--box-mb-m, var(--box-mb-s, var(--box-mb-xs)))
+    );
+    row-gap: var(
+      --box-row-gap-l,
+      var(--box-row-gap-m, var(--box-row-gap-s, var(--box-row-gap-xs)))
+    );
+    column-gap: var(
+      --box-col-gap-l,
+      var(--box-col-gap-m, var(--box-col-gap-s, var(--box-col-gap-xs)))
+    );
+  }
+}
+
+@media (min-width: 1280px) {
+  .box {
+    padding-inline-start: var(
+      --box-pl-xl,
+      var(--box-pl-l, var(--box-pl-m, var(--box-pl-s, var(--box-pl-xs))))
+    );
+    padding-inline-end: var(
+      --box-pr-xl,
+      var(--box-pr-l, var(--box-pr-m, var(--box-pr-s, var(--box-pr-xs))))
+    );
+    padding-block-start: var(
+      --box-pt-xl,
+      var(--box-pt-l, var(--box-pt-m, var(--box-pt-s, var(--box-pt-xs))))
+    );
+    padding-block-end: var(
+      --box-pb-xl,
+      var(--box-pb-l, var(--box-pb-m, var(--box-pb-s, var(--box-pb-xs))))
+    );
+    margin-inline-start: var(
+      --box-ml-xl,
+      var(--box-ml-l, var(--box-ml-m, var(--box-ml-s, var(--box-ml-xs))))
+    );
+    margin-inline-end: var(
+      --box-mr-xl,
+      var(--box-mr-l, var(--box-mr-m, var(--box-mr-s, var(--box-mr-xs))))
+    );
+    margin-block-start: var(
+      --box-mt-xl,
+      var(--box-mt-l, var(--box-mt-m, var(--box-mt-s, var(--box-mt-xs))))
+    );
+    margin-block-end: var(
+      --box-mb-xl,
+      var(--box-mb-l, var(--box-mb-m, var(--box-mb-s, var(--box-mb-xs))))
+    );
+    row-gap: var(
+      --box-row-gap-xl,
+      var(
+        --box-row-gap-l,
+        var(--box-row-gap-m, var(--box-row-gap-s, var(--box-row-gap-xs)))
+      )
+    );
+    column-gap: var(
+      --box-col-gap-xl,
+      var(
+        --box-col-gap-l,
+        var(--box-col-gap-m, var(--box-col-gap-s, var(--box-col-gap-xs)))
+      )
+    );
+  }
+}

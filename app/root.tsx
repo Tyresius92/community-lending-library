@@ -8,12 +8,17 @@ import {
   Scripts,
 } from "react-router";
 
+import colorsHref from "~/components/_global_styles/colors.css?url";
+import spaceHref from "~/components/_global_styles/space.css?url";
 import { Button } from "~/components/button/button";
 import { getUser } from "~/session.server";
 
 import type { Route } from "./+types/root";
 
-export const links: LinksFunction = () => [];
+export const links: LinksFunction = () => [
+  { rel: "stylesheet", href: colorsHref },
+  { rel: "stylesheet", href: spaceHref },
+];
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   return { user: await getUser(request) };
