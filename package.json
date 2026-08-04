@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "react-router dev",
-    "dev:test": "react-router dev --mode test",
+    "dev:test": "react-router dev --mode test --port 3001",
     "build": "react-router build",
     "start": "react-router-serve ./build/server/index.js",
     "docker": "docker compose up -d",

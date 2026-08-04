@@ -9,13 +9,17 @@ import {
 } from "react-router";
 
 import colorsHref from "~/components/_global_styles/colors.css?url";
+import cssResetHref from "~/components/_global_styles/css_reset.css?url";
 import spaceHref from "~/components/_global_styles/space.css?url";
 import { Button } from "~/components/button/button";
 import { getUser } from "~/session.server";
 
 import type { Route } from "./+types/root";
+import { Box } from "./components/box/box";
+import { Link } from "./components/link/link";
 
 export const links: LinksFunction = () => [
+  { rel: "stylesheet", href: cssResetHref },
   { rel: "stylesheet", href: colorsHref },
   { rel: "stylesheet", href: spaceHref },
 ];
@@ -36,14 +40,29 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <Links />
       </head>
       <body>
-        {user ? (
-          <div>
-            <span>{user.email}</span>
-            <Form action="/logout" method="post">
-              <Button type="submit">Logout</Button>
-            </Form>
-          </div>
-        ) : null}
+        <header>
+          <Box p={32} bg="sand-12" color="sand-1">
+            <Box display="flex" justifyContent="space-between">
+              <Box display="flex" gap={16}>
+                <Link to="/">Community Lending Library</Link>
+
+                <Link to="/communities">Browse communities</Link>
+
+                <Link to="/communities/new">Start a community</Link>
+              </Box>
+              {user ? (
+                <Box display="flex" alignItems="center" gap={32}>
+                  <span>{user.email}</span>
+                  <Form action="/logout" method="post">
+                    <Button type="submit">Logout</Button>
+                  </Form>
+                </Box>
+              ) : (
+                <Link to="/login">Log in</Link>
+              )}
+            </Box>
+          </Box>
+        </header>
         <Outlet />
         <ScrollRestoration />
         <Scripts />

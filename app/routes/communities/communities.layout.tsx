@@ -35,14 +35,6 @@ export default function CommunitiesLayout({
             </li>
           ))}
         </ul>
-        <ul>
-          <li>
-            <Link to="/communities">Browse communities</Link>
-          </li>
-          <li>
-            <Link to="/communities/new">Create a community</Link>
-          </li>
-        </ul>
       </nav>
       <Outlet />
     </div>
