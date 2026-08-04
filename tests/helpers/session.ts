@@ -1,6 +1,7 @@
-import "dotenv/config";
-
 import type { BrowserContext } from "@playwright/test";
+import dotenv from "dotenv";
+
+dotenv.config({ path: ".env.test", override: true });
 
 import { findOrCreateUserByEmail } from "~/models/user.server";
 import { createUserSession } from "~/session.server";

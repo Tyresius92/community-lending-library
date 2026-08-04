@@ -29,7 +29,7 @@ npm run validate            # test --run + lint + typecheck + e2e, in parallel
 - `postinstall` runs `prisma generate` automatically after `npm install`.
 - Prisma client is generated into `app/generated/prisma` (imported as `~/generated/prisma/client`), not `node_modules/.prisma` — this path is git-ignored but must exist before typecheck/build will pass.
 - After changing `prisma/schema.prisma`, run `npx prisma migrate dev` (creates a migration + regenerates the client).
-- Playwright config auto-starts `npm run dev`; make sure the Docker Postgres container is up and migrated first.
+- Playwright config auto-starts `npm run dev:test` (`react-router dev --mode test`) against a dedicated `postgres_test` database, reset fresh on every run — make sure the Docker Postgres container is up first (`npm run docker`).
 
 ## Architecture
 
@@ -91,11 +91,12 @@ See the live (non-hypothetical) version of this in [app/routes.ts](app/routes.ts
 
 - Vitest (`vitest.config.ts`) runs `*.test.*` files colocated under `app/`, `happy-dom` environment, globals on, setup in `test/setup-test-env.ts`.
 - Playwright e2e specs live in `tests/` (not colocated with `app/`), config in `playwright.config.ts`, runs against chromium/firefox/webkit.
+- Playwright runs against a dedicated `postgres_test` database (same Docker Postgres container as dev, different database name — see `docker/init-test-db.sql`), never the dev database. Config is `.env.test` (committed; no real secrets). `tests/global_setup.ts` runs `prisma migrate reset --force` against it automatically before every `npm run test:e2e:run` (this Prisma version always reruns the seed on reset — `prisma/seed.ts` is idempotent and its fixed fixtures don't collide with specs, which generate randomized emails/slugs); use `npm run test:db:reset` to reset it manually (e.g. after editing migrations) without running the full suite. The `postgres_test` database only exists once `./postgres-data` has been initialized with `docker/init-test-db.sql` mounted — a pre-existing volume needs a one-time wipe (`docker compose down && rm -rf ./postgres-data && docker compose up -d --wait && npm run setup`) to pick it up.
 - MSW (`mocks/`) is available for stubbing third-party HTTP in tests/dev; see `mocks/README.md`.
 
 ## CI/CD
 
-`.github/workflows/deploy.yml` runs lint, typecheck, vitest (with coverage), and Playwright (against a docker-composed Postgres, migrated via `prisma migrate reset --force`) on every push/PR. On success, pushes to `dev` deploy to the Fly.io staging app and then fast-forward `dev` into `main`; pushes to `main` deploy to the Fly.io production app. There is no separate merge-to-main step — `dev` is promoted to `main` automatically after a successful staging deploy.
+`.github/workflows/deploy.yml` runs lint, typecheck, vitest (with coverage), and Playwright (against a docker-composed Postgres, with Playwright's own `globalSetup` resetting the dedicated `postgres_test` database — the same mechanism used locally) on every push/PR. On success, pushes to `dev` deploy to the Fly.io staging app and then fast-forward `dev` into `main`; pushes to `main` deploy to the Fly.io production app. There is no separate merge-to-main step — `dev` is promoted to `main` automatically after a successful staging deploy.
 
 ## Conventions
 

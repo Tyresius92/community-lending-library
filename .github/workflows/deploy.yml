@@ -101,18 +101,12 @@ jobs:
 
       - name: 🐳 Docker compose
         run: docker compose up -d --wait
-        env:
-          DATABASE_POOLER_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
-          DATABASE_DIRECT_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
 
       - name: 🩺 Dump Postgres diagnostics on failure
         if: always()
         run: |
           docker inspect --format='{{json .State.Health}}' $(docker compose ps -q postgres) || true
           docker compose logs postgres || true
-
-      - name: 🛠 Setup Database
-        run: npx prisma migrate reset --force
 
       - name: 🌳 Playwright run
         run: npx playwright test

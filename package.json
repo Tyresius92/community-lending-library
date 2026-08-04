@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "react-router dev",
+    "dev:test": "react-router dev --mode test",
     "build": "react-router build",
     "start": "react-router-serve ./build/server/index.js",
     "docker": "docker compose up -d",
@@ -17,6 +18,7 @@
     "start:mocks": "cross-env NODE_ENV=production NODE_OPTIONS=\"--require ./mocks --require dotenv/config\" react-router-serve ./build/server/index.js",
     "test": "vitest",
     "test:e2e:run": "npx playwright test",
+    "test:db:reset": "node --env-file=.env.test ./node_modules/.bin/prisma migrate reset --force",
     "typecheck": "react-router typegen && tsc",
     "validate": "npm-run-all --parallel \"test -- --run\" lint typecheck test:e2e:run"
   },
