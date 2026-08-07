@@ -32,22 +32,6 @@ async function seed() {
 
   const user = await prisma.user.create({ data: { email } });
 
-  await prisma.note.create({
-    data: {
-      title: "My first note",
-      body: "Hello, world!",
-      userId: user.id,
-    },
-  });
-
-  await prisma.note.create({
-    data: {
-      title: "My second note",
-      body: "Hello, world!",
-      userId: user.id,
-    },
-  });
-
   const borrowerEmail = "bob@example.com";
 
   await prisma.user.delete({ where: { email: borrowerEmail } }).catch(() => {

@@ -16,9 +16,4 @@ export default [
       [index("routes/communities/$communitySlug/$communitySlug.tsx")],
     ),
   ]),
-  route("notes", "routes/notes/notes.layout.tsx", [
-    index("routes/notes/notes.tsx"),
-    route("new", "routes/notes/new/new.tsx"),
-    route(":noteId", "routes/notes/$noteId/$noteId.tsx"),
-  ]),
 ] satisfies RouteConfig;

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A React Router (Framework Mode) + Prisma + PostgreSQL app, originally scaffolded from the (now-archived) Remix Blues Stack. The README still describes the original Blues Stack note-taking demo — treat it as stale background, not current behavior; auth in particular has since been rewritten (see below).
 
-The Prisma schema (`prisma/schema.prisma`) already models the target domain — `Community`, `CommunityMembership`, `Item`, `Loan`, `Message`, `InviteToken` — for a community lending-library app where members share items within a community and track loans through a request/accept/checkout/return lifecycle. Application code has partially caught up: `User`, `MagicLink`, the legacy `Note` model, and a first `communities` create/join slice (`app/routes/communities/`) are wired up; `Item`, `Loan`, `Message`, and `InviteToken` are not yet. When adding features, check whether the schema already has the shape you need before changing it.
+The Prisma schema (`prisma/schema.prisma`) already models the target domain — `Community`, `CommunityMembership`, `Item`, `Loan`, `Message`, `InviteToken` — for a community lending-library app where members share items within a community and track loans through a request/accept/checkout/return lifecycle. Application code has partially caught up: `User`, `MagicLink`, and a first `communities` create/join slice (`app/routes/communities/`) are wired up; `Item`, `Loan`, `Message`, and `InviteToken` are not yet. When adding features, check whether the schema already has the shape you need before changing it.
 
 ## Commands
 
@@ -51,13 +51,14 @@ app/routes/
 │   ├── join/
 │   │   └── join.tsx
 │   └── _auth.layout.tsx
-└── notes/
+└── communities/
     ├── new/
     │   └── new.tsx
-    ├── $noteId/
-    │   └── $noteId.tsx
-    ├── notes.layout.tsx        // shared layout for notes + its children
-    └── notes.tsx                // content at exactly "/notes"
+    ├── $communitySlug/
+    │   ├── $communitySlug.layout.tsx   // shared layout for a single community + its children
+    │   └── $communitySlug.tsx           // content at exactly "/communities/:communitySlug"
+    ├── communities.layout.tsx        // shared layout for communities + its children
+    └── communities.tsx                // content at exactly "/communities"
 ```
 
 ```ts
@@ -67,21 +68,25 @@ export default [
     route("login", "routes/_auth/login/login.tsx"),
     route("join", "routes/_auth/join/join.tsx"),
   ]),
-  route("notes", "routes/notes/notes.layout.tsx", [
-    index("routes/notes/notes.tsx"),
-    route("new", "routes/notes/new/new.tsx"),
-    route(":noteId", "routes/notes/$noteId/$noteId.tsx"),
+  route("communities", "routes/communities/communities.layout.tsx", [
+    index("routes/communities/communities.tsx"),
+    route("new", "routes/communities/new/new.tsx"),
+    route(
+      ":communitySlug",
+      "routes/communities/$communitySlug/$communitySlug.layout.tsx",
+      [index("routes/communities/$communitySlug/$communitySlug.tsx")],
+    ),
   ]),
 ] satisfies RouteConfig;
 ```
 
-See the live (non-hypothetical) version of this in [app/routes.ts](app/routes.ts) and `app/routes/notes/`.
+See the live (non-hypothetical) version of this in [app/routes.ts](app/routes.ts) and `app/routes/communities/`.
 
 **Planned community IA** (not yet built — `Item`/`Loan`/`Message` aren't wired up yet): once built, community-scoped screens nest under `/community/:communitySlug` (`browse`, `members`, `loans`, `items/:id`), with `/communities` one level up as the only place "my communities" (join/leave/switch) is a page — it must not be nested inside a community's own section list as a peer of Browse/Members/Loans. Items are modeled as fully separate listings per community (no shared item entity reused across communities). Switching communities navigates to a different community's route root, preserving the current leaf route where sensible (e.g. staying on `/loans`). **Privacy rule** (functional, not just visual — must hold in loaders/actions, not only be hidden client-side): borrowers never see who owns an item until the lender accepts their request; until then, render a neutral placeholder like "a neighbor" instead of the owner's name/avatar on Browse, Item Detail, and My Loans. On the Members list, item ownership must never be shown or inferable at all (no per-type item counts, no click-through from a member to their listings) — only aggregate, non-identifying stats like total lend count are safe. Full visual design system (colors, shadows, typography, screen layouts, copy voice, accessibility floor) lives in the `zine-design-system` skill — read it before building any of these screens.
 
 **Auth (passwordless, magic-link)**: there is no password field on `User`. Login flow: [login.tsx](app/routes/login/login.tsx) validates + rate-limits (`app/utils/rate_limit.server.ts`, in-memory, per-process) an email, upserts a `User` (`findOrCreateUserByEmail`), creates a `MagicLink` token (`app/models/magic_link.server.ts` — random token, only its SHA-256 hash is stored, 20-minute expiry, single-use via a conditional `updateMany` to survive email-scanner prefetches), and emails it via `sendEmail`/react-email (`app/mailer.server.ts`, `app/emails/`). [magic_link.tsx](app/routes/magic_link/magic_link.tsx) consumes the token and calls `createUserSession`. Session state itself is a signed cookie (`app/session.server.ts`, `createCookieSessionStorage`) storing just the `userId`; `requireUser`/`requireUserId` guard loaders/actions and redirect to `/login?redirectTo=...`.
 
-**Data layer**: `app/db.server.ts` builds a singleton `PrismaClient` over `@prisma/adapter-pg`, keyed via `app/singleton.server.ts` so HMR in dev doesn't spawn duplicate clients/connections. Auth/notes code goes through functions in `app/models/*.server.ts` (`user.server.ts`, `magic_link.server.ts`, `note.server.ts`). Newer feature areas (starting with `communities`) skip that indirection — loaders/actions call `prisma` directly, and each route independently fetches/re-checks what it needs rather than sharing data across routes. Route components also read their data via the `loaderData`/`actionData` props from React Router's typegen (`Route.ComponentProps`, imported from `./+types/<routename>`) instead of the `useLoaderData()`/`useActionData()` hooks that older routes still use.
+**Data layer**: `app/db.server.ts` builds a singleton `PrismaClient` over `@prisma/adapter-pg`, keyed via `app/singleton.server.ts` so HMR in dev doesn't spawn duplicate clients/connections. Auth code goes through functions in `app/models/*.server.ts` (`user.server.ts`, `magic_link.server.ts`). Newer feature areas (starting with `communities`) skip that indirection — loaders/actions call `prisma` directly, and each route independently fetches/re-checks what it needs rather than sharing data across routes. Route components also read their data via the `loaderData`/`actionData` props from React Router's typegen (`Route.ComponentProps`, imported from `./+types/<routename>`) instead of the `useLoaderData()`/`useActionData()` hooks that older routes still use.
 
 **Design system (`app/components/`)**: a small, currently-unstyled component library (`Button`, `Link`, `TextInput`, `TextArea`, `Select`, `RadioGroup`, `Checkbox`, `Box`), modeled on the equivalent components in the `net-worth-tracker` project. Both folders and files use snake_case (e.g. `app/components/text_input/text_input.tsx`); only the exported component name is PascalCase (`TextInput`). No CSS yet — components exist for semantic/accessible structure (labels, `aria-describedby`, `aria-invalid`, etc.) and are meant to be skinned later without call sites changing. New forms/nav should be built from these rather than raw HTML elements. The target visual styling (colors, shadows, typography) isn't decided in this file — see the `zine-design-system` skill.
 
@@ -100,7 +105,7 @@ See the live (non-hypothetical) version of this in [app/routes.ts](app/routes.ts
 
 ## Conventions
 
-- **New files, directories, and routes use `snake_case`** (e.g. `magic_link.server.ts`, `rate_limit.server.ts`), not kebab-case. React component export names stay `PascalCase`. Exception: dynamic route segments are camelCase, prefixed with `$` (e.g. `$userId`, `$noteId`) — see Architecture → Routing.
+- **New files, directories, and routes use `snake_case`** (e.g. `magic_link.server.ts`, `rate_limit.server.ts`), not kebab-case. React component export names stay `PascalCase`. Exception: dynamic route segments are camelCase, prefixed with `$` (e.g. `$userId`, `$communitySlug`) — see Architecture → Routing.
 - Import alias `~/*` maps to `app/*`. ESLint enforces import ordering/grouping (builtin → external → internal → parent/sibling, alphabetized, blank line between groups) and treats `~/` as internal.
 - `*.server.ts` naming marks server-only modules (enforced by convention/React Router, not just style) — keep secrets and DB/Prisma access behind that suffix.
 - Dependencies in `package.json` are pinned to exact versions (no `^`/`~` ranges) — match that when adding packages.
