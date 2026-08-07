@@ -10,6 +10,7 @@
     "start": "react-router-serve ./build/server/index.js",
     "docker": "docker compose up -d",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "generate:colors": "tsx scripts/generate_colors.ts",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
     "lint:fix": "eslint --fix --cache --cache-location ./node_modules/.cache/eslint .",

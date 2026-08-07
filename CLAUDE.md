@@ -19,6 +19,7 @@ npm run typecheck        # tsc, no emit
 npm run lint              # eslint (cached)
 npm run lint:fix
 npm run format             # prettier --write .
+npm run format:check       # prettier --check . (read-only; used in CI)
 npm run test               # vitest (watch mode)
 npm run test -- --run     # vitest, single run
 npm run test -- --run app/utils.test.ts   # run a single vitest file

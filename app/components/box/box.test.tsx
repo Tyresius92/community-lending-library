@@ -69,7 +69,11 @@ describe("responsive spacing", () => {
   });
 
   test("a specific side overrides px only at the breakpoint it sets", () => {
-    render(<Box px={8} pl={{ m: 24 }}>content</Box>);
+    render(
+      <Box px={8} pl={{ m: 24 }}>
+        content
+      </Box>,
+    );
     const style = screen.getByText("content").getAttribute("style") ?? "";
     expect(style).toContain("--box-pl-xs: var(--space-8)");
     expect(style).toContain("--box-pl-m: var(--space-24)");
