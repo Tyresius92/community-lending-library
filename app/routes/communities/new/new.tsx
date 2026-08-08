@@ -17,6 +17,8 @@ import {
 
 import type { Route } from "./+types/new";
 
+export const meta: Route.MetaFunction = () => [{ title: "Start a community" }];
+
 export const loader = async ({ request }: Route.LoaderArgs) => {
   await requireUserId(request);
   return null;

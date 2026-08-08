@@ -10,6 +10,10 @@ import { suggestDisplayNameFromEmail, useUser } from "~/utils";
 
 import type { Route } from "./+types/$communitySlug";
 
+export const meta: Route.MetaFunction = ({ loaderData }) => [
+  { title: loaderData?.community.name ?? "Community" },
+];
+
 export const loader = async ({ params, request }: Route.LoaderArgs) => {
   const userId = await requireUserId(request);
   invariant(params.communitySlug, "communitySlug not found");

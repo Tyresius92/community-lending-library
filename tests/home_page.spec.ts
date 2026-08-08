@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
 
+import { expectNoAxeViolations } from "./helpers/axe";
+
 test("home page loads for an unauthenticated user", async ({ page }) => {
   await page.goto("/");
 
@@ -8,4 +10,6 @@ test("home page loads for an unauthenticated user", async ({ page }) => {
       name: "Community Lending Library",
     }),
   ).toBeVisible();
+
+  await expectNoAxeViolations(page);
 });

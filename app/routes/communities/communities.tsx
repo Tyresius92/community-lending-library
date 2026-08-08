@@ -4,6 +4,8 @@ import { requireUserId } from "~/session.server";
 
 import type { Route } from "./+types/communities";
 
+export const meta: Route.MetaFunction = () => [{ title: "Browse communities" }];
+
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const userId = await requireUserId(request);
 

@@ -32,12 +32,12 @@ export const loader = async ({ params, request }: Route.LoaderArgs) => {
 
 export default function CommunityLayout({ loaderData }: Route.ComponentProps) {
   return (
-    <div>
+    <main>
       <header>
         <h1>{loaderData.community.name}</h1>
       </header>
       <Outlet />
-    </div>
+    </main>
   );
 }
 

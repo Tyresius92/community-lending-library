@@ -32,7 +32,7 @@ module.exports = {
         "plugin:react/recommended",
         "plugin:react/jsx-runtime",
         "plugin:react-hooks/recommended",
-        "plugin:jsx-a11y/recommended",
+        "plugin:jsx-a11y/strict",
         "prettier",
       ],
       settings: {
@@ -50,6 +50,7 @@ module.exports = {
           "warn",
           { validStrategies: ["ternary"] },
         ],
+        "jsx-a11y/no-autofocus": "off",
       },
     },
 

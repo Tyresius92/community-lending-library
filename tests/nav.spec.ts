@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { expectNoAxeViolations } from "./helpers/axe";
 import { loginAsNewUser } from "./helpers/session";
 
 test("nav shows the site title linking home and a login link when logged out", async ({
@@ -12,6 +13,8 @@ test("nav shows the site title linking home and a login link when logged out", a
     nav.getByRole("link", { name: "Community Lending Library" }),
   ).toHaveAttribute("href", "/");
   await expect(nav.getByRole("link", { name: "Log in" })).toBeVisible();
+
+  await expectNoAxeViolations(page);
 });
 
 test("nav shows the user's email and a logout button when logged in", async ({
@@ -31,6 +34,8 @@ test("nav shows the user's email and a logout button when logged in", async ({
   await expect(nav.getByRole("button", { name: "Logout" })).toBeVisible();
   await expect(nav.getByRole("link", { name: "Log in" })).toHaveCount(0);
 
+  await expectNoAxeViolations(page);
+
   await context.close();
 });
 
@@ -49,6 +54,8 @@ test("logging out returns the nav to its logged-out state", async ({
   await expect(page).toHaveURL("/");
   await expect(nav.getByRole("link", { name: "Log in" })).toBeVisible();
   await expect(nav.getByText(email)).not.toBeVisible();
+
+  await expectNoAxeViolations(page);
 
   await context.close();
 });

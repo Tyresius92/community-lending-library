@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { expectNoAxeViolations } from "./helpers/axe";
 import { loginAsNewUser } from "./helpers/session";
 
 test("a user can create a community and another user can join it", async ({
@@ -16,12 +17,15 @@ test("a user can create a community and another user can join it", async ({
   await loginAsNewUser(ownerContext, ownerEmail);
 
   await ownerPage.goto("/communities/new");
+  await expectNoAxeViolations(ownerPage);
+
   await ownerPage.getByLabel("Name", { exact: true }).fill(communityName);
   await ownerPage.getByLabel("URL").fill(slug);
   await ownerPage.getByLabel(/Your display name/).fill("Owner Person");
   await ownerPage.getByRole("button", { name: "Create community" }).click();
   await expect(ownerPage).toHaveURL(`/communities/${slug}`);
   await expect(ownerPage.getByText("Owner Person (owner)")).toBeVisible();
+  await expectNoAxeViolations(ownerPage);
 
   const joinerContext = await browser.newContext();
   const joinerPage = await joinerContext.newPage();
@@ -36,6 +40,7 @@ test("a user can create a community and another user can join it", async ({
   await expect(
     joinerPage.getByText(/You.?re a member as Joiner Person/),
   ).toBeVisible();
+  await expectNoAxeViolations(joinerPage);
 
   await ownerPage.reload();
   await expect(ownerPage.getByText("Joiner Person (member)")).toBeVisible();
