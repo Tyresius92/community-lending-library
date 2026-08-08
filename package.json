@@ -21,7 +21,9 @@
     "test:e2e:run": "npx playwright test",
     "test:db:reset": "node --env-file=.env.test ./node_modules/.bin/prisma migrate reset --force",
     "typecheck": "react-router typegen && tsc",
-    "validate": "npm-run-all --parallel \"test -- --run\" lint typecheck test:e2e:run"
+    "validate": "npm-run-all --parallel \"test -- --run\" lint typecheck test:e2e:run",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "eslintIgnore": [
     "/node_modules",
@@ -78,7 +80,17 @@
     "tsx": "4.23.1",
     "typescript": "5.9.3",
     "vite": "8.1.5",
-    "vitest": "4.1.10"
+    "vitest": "4.1.10",
+    "storybook": "^10.5.7",
+    "@storybook/react-vite": "^10.5.7",
+    "@chromatic-com/storybook": "latest",
+    "@storybook/addon-vitest": "^10.5.7",
+    "@storybook/addon-a11y": "^10.5.7",
+    "@storybook/addon-docs": "^10.5.7",
+    "@storybook/addon-mcp": "latest",
+    "eslint-plugin-storybook": "^10.5.7",
+    "@vitest/browser-playwright": "4.1.10",
+    "playwright": "latest"
   },
   "engines": {
     "node": "^20.19 || ^22.12 || >=24.0"
