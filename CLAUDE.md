@@ -25,6 +25,8 @@ npm run test -- --run     # vitest, single run
 npm run test -- --run app/utils.test.ts   # run a single vitest file
 npm run test:e2e:run      # npx playwright test (spins up dev server itself)
 npm run validate            # test --run + lint + typecheck + e2e, in parallel
+npm run storybook          # start Storybook dev server (http://localhost:6006)
+npm run build-storybook   # build static Storybook
 ```
 
 - `postinstall` runs `prisma generate` automatically after `npm install`.
@@ -91,18 +93,21 @@ See the live (non-hypothetical) version of this in [app/routes.ts](app/routes.ts
 
 **Design system (`app/components/`)**: a small, currently-unstyled component library (`Button`, `Link`, `TextInput`, `TextArea`, `Select`, `RadioGroup`, `Checkbox`, `Box`), modeled on the equivalent components in the `net-worth-tracker` project. Both folders and files use snake_case (e.g. `app/components/text_input/text_input.tsx`); only the exported component name is PascalCase (`TextInput`). No CSS yet — components exist for semantic/accessible structure (labels, `aria-describedby`, `aria-invalid`, etc.) and are meant to be skinned later without call sites changing. New forms/nav should be built from these rather than raw HTML elements. The target visual styling (colors, shadows, typography) isn't decided in this file — see the `zine-design-system` skill.
 
+**Storybook**: every design-system component has a colocated `*.stories.tsx` (e.g. `app/components/button/button.stories.tsx`), run via `npm run storybook`. Each story file sets an explicit `title: "components/PascalName"` in its `meta` (Storybook's file-path-derived default would otherwise show the snake_case folder name in the sidebar). Every new or modified design-system component must ship with a story as part of that component's own PR — this is enforced, not just convention: `@storybook/addon-a11y` runs an axe accessibility check against every story, and `.storybook/preview.tsx` sets `a11y.test: "error"`, so an accessibility violation in any story fails `npm run test` and blocks CI (see Testing/CI below). `.storybook/main.ts` guards the root `vite.config.ts`'s `reactRouter()` plugin behind `process.env.STORYBOOK` (set at the top of `main.ts`) since that plugin only works under the React Router CLI, not Storybook's own Vite server.
+
 **Env vars** (see `.env.example`): `DATABASE_POOLER_URL` (used at request time by the app), `DATABASE_DIRECT_URL` (used by Prisma CLI for migrations — see `prisma.config.ts`), `SESSION_SECRET`, `RESEND_API_KEY`, `FROM_EMAIL`. Separate `.env.staging` / `.env.production` files exist alongside `.env`.
 
 **Testing**:
 
 - Vitest (`vitest.config.ts`) runs `*.test.*` files colocated under `app/`, `happy-dom` environment, globals on, setup in `test/setup-test-env.ts`.
+- Vitest also has a second, browser-mode `storybook` project (`@storybook/addon-vitest`, Chromium via `@vitest/browser-playwright`) that runs every `*.stories.tsx` file's play functions and the `addon-a11y` accessibility check. Plain `npm run test` (and `npm run validate`) runs both projects together; target just this one with `npx vitest --project storybook run`.
 - Playwright e2e specs live in `tests/` (not colocated with `app/`), config in `playwright.config.ts`, runs against chromium/firefox/webkit.
 - Playwright runs against a dedicated `postgres_test` database (same Docker Postgres container as dev, different database name — see `docker/init-test-db.sql`), never the dev database. Config is `.env.test` (committed; no real secrets). `tests/global_setup.ts` runs `prisma migrate reset --force` against it automatically before every `npm run test:e2e:run` (this Prisma version always reruns the seed on reset — `prisma/seed.ts` is idempotent and its fixed fixtures don't collide with specs, which generate randomized emails/slugs); use `npm run test:db:reset` to reset it manually (e.g. after editing migrations) without running the full suite. The `postgres_test` database only exists once `./postgres-data` has been initialized with `docker/init-test-db.sql` mounted — a pre-existing volume needs a one-time wipe (`docker compose down && rm -rf ./postgres-data && docker compose up -d --wait && npm run setup`) to pick it up.
 - MSW (`mocks/`) is available for stubbing third-party HTTP in tests/dev; see `mocks/README.md`.
 
 ## CI/CD
 
-`.github/workflows/deploy.yml` runs lint, typecheck, vitest (with coverage), and Playwright (against a docker-composed Postgres, with Playwright's own `globalSetup` resetting the dedicated `postgres_test` database — the same mechanism used locally) on every push/PR. On success, pushes to `dev` deploy to the Fly.io staging app and then fast-forward `dev` into `main`; pushes to `main` deploy to the Fly.io production app. There is no separate merge-to-main step — `dev` is promoted to `main` automatically after a successful staging deploy.
+`.github/workflows/deploy.yml` runs lint, typecheck, vitest (with coverage — this includes the Storybook/a11y project, so an accessibility violation in any story fails this job and blocks deploy; the job installs Chromium via `npx playwright install --with-deps chromium` first), and Playwright (against a docker-composed Postgres, with Playwright's own `globalSetup` resetting the dedicated `postgres_test` database — the same mechanism used locally) on every push/PR. On success, pushes to `dev` deploy to the Fly.io staging app and then fast-forward `dev` into `main`; pushes to `main` deploy to the Fly.io production app. There is no separate merge-to-main step — `dev` is promoted to `main` automatically after a successful staging deploy.
 
 ## Conventions
 

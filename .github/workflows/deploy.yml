@@ -93,7 +93,10 @@ jobs:
       - name: 📥 Install deps
         run: npm install
 
-      - name: ⚡ Run vitest
+      - name: 🎭 Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: ⚡ Run vitest (unit + Storybook a11y)
         run: npm run test -- --coverage
 
   playwright:
