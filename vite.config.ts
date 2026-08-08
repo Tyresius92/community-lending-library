@@ -8,5 +8,5 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
-  plugins: [reactRouter()],
+  plugins: [!process.env.STORYBOOK && reactRouter()].filter(Boolean),
 });
