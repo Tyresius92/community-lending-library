@@ -11,19 +11,18 @@ model User {
   id    String @id @default(cuid())
   email String @unique
 
-  completedLoanCount Int @default(0)
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   magicLinks MagicLink[]
 
-  memberships      CommunityMembership[]
-  ownedCommunities Community[]           @relation("CommunityOwner")
-  loansAsBorrower  Loan[]                @relation("LoanBorrower")
-  loansAsOwner     Loan[]                @relation("LoanOwner")
-  messagesSent     Message[]
-  inviteTokensSent InviteToken[]
+  memberships         CommunityMembership[]
+  ownedCommunities    Community[]           @relation("CommunityOwner")
+  loansAsBorrower     Loan[]                @relation("LoanBorrower")
+  loansAsOwner        Loan[]                @relation("LoanOwner")
+  messagesSent        Message[]
+  inviteTokensSent    InviteToken[]         @relation("InviteTokenCreatedBy")
+  inviteTokensRevoked InviteToken[]         @relation("InviteTokenRevokedBy")
 }
 
 model MagicLink {
@@ -116,8 +115,6 @@ model CommunityMembership {
   displayName           String
   realName              String?
   shareRealNameOverride Boolean @default(false)
-
-  completedLoanCount Int @default(0)
 
   joinedAt DateTime @default(now())
 
@@ -215,8 +212,14 @@ model InviteToken {
   community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   communityId String
 
-  createdBy       User   @relation(fields: [createdByUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdBy       User   @relation("InviteTokenCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   createdByUserId String
+
+  expiresAt DateTime?
+  revokedAt DateTime?
+
+  revokedBy       User?   @relation("InviteTokenRevokedBy", fields: [revokedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  revokedByUserId String?
 
   createdAt DateTime @default(now())
 
