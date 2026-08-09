@@ -11,6 +11,8 @@ import {
   Text,
 } from "react-email";
 
+import { emailT, getEmailLocale } from "~/emails/locale.server";
+
 interface BaseLayoutProps {
   preview: string;
   children: ReactNode;
@@ -18,13 +20,13 @@ interface BaseLayoutProps {
 
 export function BaseLayout({ preview, children }: BaseLayoutProps) {
   return (
-    <Html lang="en">
+    <Html lang={getEmailLocale()}>
       <Head />
       <Preview>{preview}</Preview>
       <Body style={styles.body}>
         <Container style={styles.container}>
           <Section style={styles.header}>
-            <Heading style={styles.siteName}>Community Lending Library</Heading>
+            <Heading style={styles.siteName}>{emailT("siteName")}</Heading>
             <Hr style={styles.divider} />
           </Section>
 
@@ -32,7 +34,7 @@ export function BaseLayout({ preview, children }: BaseLayoutProps) {
 
           <Section style={styles.footer}>
             <Hr style={styles.divider} />
-            <Text style={styles.footerText}>Community Lending Library</Text>
+            <Text style={styles.footerText}>{emailT("footer")}</Text>
           </Section>
         </Container>
       </Body>

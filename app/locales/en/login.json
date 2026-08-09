@@ -1,0 +1,20 @@
+{
+  "meta": {
+    "title": "Log in"
+  },
+  "magicLinkErrors": {
+    "invalid": "That link isn't valid. Enter your email to get a new one.",
+    "expired": "That link has expired. Enter your email to get a new one.",
+    "used": "That link was already used. Enter your email to get a new one."
+  },
+  "errors": {
+    "emailInvalid": "Email is invalid"
+  },
+  "checkEmail": "Check your email — we sent a login link to {{email}}.",
+  "labels": {
+    "email": "Email address"
+  },
+  "buttons": {
+    "submit": "Send login link"
+  }
+}

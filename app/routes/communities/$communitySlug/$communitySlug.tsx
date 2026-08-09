@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { data, redirect, Form } from "react-router";
 import invariant from "tiny-invariant";
 
@@ -5,6 +6,7 @@ import { Button } from "~/components/button/button";
 import { TextInput } from "~/components/text_input/text_input";
 import { prisma } from "~/db.server";
 import { Prisma } from "~/generated/prisma/client";
+import { getInstance, getLocale } from "~/i18n/middleware.server";
 import { requireUserId } from "~/session.server";
 import { suggestDisplayNameFromEmail, useUser } from "~/utils";
 
@@ -68,16 +70,21 @@ export const loader = async ({ params, request }: Route.LoaderArgs) => {
   };
 };
 
-export const action = async ({ params, request }: Route.ActionArgs) => {
+export const action = async ({
+  params,
+  request,
+  context,
+}: Route.ActionArgs) => {
   const userId = await requireUserId(request);
   invariant(params.communitySlug, "communitySlug not found");
+  const t = getInstance(context).getFixedT(getLocale(context), "communities");
 
   const formData = await request.formData();
   const displayName = formData.get("displayName");
 
   if (typeof displayName !== "string" || displayName.trim().length === 0) {
     return data(
-      { errors: { displayName: "Display name is required" } },
+      { errors: { displayName: t("errors.displayNameRequired") } },
       { status: 400 },
     );
   }
@@ -126,12 +133,13 @@ export default function CommunityOverview({
   loaderData,
   actionData,
 }: Route.ComponentProps) {
+  const { t } = useTranslation("communities");
   const user = useUser();
 
   if (loaderData.accessLevel === "limited") {
     return (
       <div>
-        <p>This community requires an invite to join.</p>
+        <p>{t("notices.inviteOnly")}</p>
       </div>
     );
   }
@@ -143,22 +151,26 @@ export default function CommunityOverview({
       {community.description ? <p>{community.description}</p> : null}
 
       {viewerMembership ? (
-        <p>You&apos;re a member as {viewerMembership.displayName}.</p>
+        <p>
+          {t("notices.memberAs", {
+            displayName: viewerMembership.displayName,
+          })}
+        </p>
       ) : null}
       {!viewerMembership && canJoin ? (
         <Form method="post">
           <TextInput
-            label="Display name"
+            label={t("labels.displayName")}
             name="displayName"
             type="text"
             defaultValue={suggestDisplayNameFromEmail(user.email)}
             errorMessage={actionData?.errors?.displayName ?? undefined}
           />
-          <Button type="submit">Join community</Button>
+          <Button type="submit">{t("buttons.joinCommunity")}</Button>
         </Form>
       ) : null}
 
-      <h2>Members</h2>
+      <h2>{t("headings.members")}</h2>
       <ul>
         {community.memberships.map((membership) => (
           <li key={membership.id}>

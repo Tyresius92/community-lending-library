@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Outlet } from "react-router";
 
 import { Link } from "~/components/link/link";
@@ -21,11 +22,12 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 export default function CommunitiesLayout({
   loaderData,
 }: Route.ComponentProps) {
+  const { t } = useTranslation("communities");
   const { communities } = loaderData;
 
   return (
     <div>
-      <nav aria-label="Your communities">
+      <nav aria-label={t("nav.yourCommunities")}>
         <ul>
           {communities.map((community) => (
             <li key={community.id}>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { isRouteErrorResponse, Outlet, useRouteError } from "react-router";
 import invariant from "tiny-invariant";
 
@@ -42,19 +43,26 @@ export default function CommunityLayout({ loaderData }: Route.ComponentProps) {
 }
 
 export function ErrorBoundary() {
+  const { t } = useTranslation("communities");
   const error = useRouteError();
 
   if (error instanceof Error) {
-    return <div>An unexpected error occurred: {error.message}</div>;
+    return (
+      <div>{t("errors.unexpectedWithMessage", { message: error.message })}</div>
+    );
   }
 
   if (!isRouteErrorResponse(error)) {
-    return <h1>Unknown Error</h1>;
+    return <h1>{t("errors.unknown")}</h1>;
   }
 
   if (error.status === 404) {
-    return <div>Community not found</div>;
+    return <div>{t("errors.notFound")}</div>;
   }
 
-  return <div>An unexpected error occurred: {error.statusText}</div>;
+  return (
+    <div>
+      {t("errors.unexpectedWithMessage", { message: error.statusText })}
+    </div>
+  );
 }

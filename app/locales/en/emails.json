@@ -1,0 +1,13 @@
+{
+  "siteName": "Community Lending Library",
+  "footer": "Community Lending Library",
+  "magicLink": {
+    "subject": "Your login link",
+    "preview": "Your login link — this link expires in 20 minutes.",
+    "heading": "Log in",
+    "body": "Click the button below to log in. This link expires in 20 minutes and can only be used once.",
+    "button": "Log in",
+    "fallbackLabel": "If the button doesn't work, copy this link into your browser:",
+    "disclaimer": "If you didn't request this email, you can safely ignore it."
+  }
+}

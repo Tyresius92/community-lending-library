@@ -9,8 +9,11 @@ import { PassThrough } from "node:stream";
 import { createReadableStreamFromReadable } from "@react-router/node";
 import { isbot } from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
+import { I18nextProvider } from "react-i18next";
 import { ServerRouter } from "react-router";
-import type { EntryContext } from "react-router";
+import type { EntryContext, RouterContextProvider } from "react-router";
+
+import { getInstance } from "~/i18n/middleware.server";
 
 export const streamTimeout = 5000;
 
@@ -19,6 +22,7 @@ export default function handleRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   reactRouterContext: EntryContext,
+  loadContext: RouterContextProvider,
 ) {
   return isbot(request.headers.get("user-agent"))
     ? handleBotRequest(
@@ -26,12 +30,14 @@ export default function handleRequest(
         responseStatusCode,
         responseHeaders,
         reactRouterContext,
+        loadContext,
       )
     : handleBrowserRequest(
         request,
         responseStatusCode,
         responseHeaders,
         reactRouterContext,
+        loadContext,
       );
 }
 
@@ -40,10 +46,13 @@ function handleBotRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   reactRouterContext: EntryContext,
+  loadContext: RouterContextProvider,
 ) {
   return new Promise((resolve, reject) => {
     const { abort, pipe } = renderToPipeableStream(
-      <ServerRouter context={reactRouterContext} url={request.url} />,
+      <I18nextProvider i18n={getInstance(loadContext)}>
+        <ServerRouter context={reactRouterContext} url={request.url} />
+      </I18nextProvider>,
       {
         onAllReady() {
           const body = new PassThrough();
@@ -78,10 +87,13 @@ function handleBrowserRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   reactRouterContext: EntryContext,
+  loadContext: RouterContextProvider,
 ) {
   return new Promise((resolve, reject) => {
     const { abort, pipe } = renderToPipeableStream(
-      <ServerRouter context={reactRouterContext} url={request.url} />,
+      <I18nextProvider i18n={getInstance(loadContext)}>
+        <ServerRouter context={reactRouterContext} url={request.url} />
+      </I18nextProvider>,
       {
         onShellReady() {
           const body = new PassThrough();

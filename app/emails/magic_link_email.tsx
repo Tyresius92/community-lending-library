@@ -1,5 +1,7 @@
 import { Button, Heading, Section, Text } from "react-email";
 
+import { emailT } from "~/emails/locale.server";
+
 import { BaseLayout } from "./base_layout";
 
 interface MagicLinkEmailProps {
@@ -8,28 +10,23 @@ interface MagicLinkEmailProps {
 
 export function MagicLinkEmail({ magicLinkUrl }: MagicLinkEmailProps) {
   return (
-    <BaseLayout preview="Your login link — this link expires in 20 minutes.">
-      <Heading style={styles.heading}>Log in</Heading>
+    <BaseLayout preview={emailT("magicLink.preview")}>
+      <Heading style={styles.heading}>{emailT("magicLink.heading")}</Heading>
 
-      <Text style={styles.body}>
-        Click the button below to log in. This link expires in 20 minutes and
-        can only be used once.
-      </Text>
+      <Text style={styles.body}>{emailT("magicLink.body")}</Text>
 
       <Section style={styles.buttonContainer}>
         <Button href={magicLinkUrl} style={styles.button}>
-          Log in
+          {emailT("magicLink.button")}
         </Button>
       </Section>
 
       <Text style={styles.fallbackLabel}>
-        If the button doesn&apos;t work, copy this link into your browser:
+        {emailT("magicLink.fallbackLabel")}
       </Text>
       <Text style={styles.fallbackUrl}>{magicLinkUrl}</Text>
 
-      <Text style={styles.disclaimer}>
-        If you didn&apos;t request this email, you can safely ignore it.
-      </Text>
+      <Text style={styles.disclaimer}>{emailT("magicLink.disclaimer")}</Text>
     </BaseLayout>
   );
 }

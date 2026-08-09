@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { data, redirect, Form } from "react-router";
 
 import { Button } from "~/components/button/button";
@@ -7,6 +8,7 @@ import { TextArea } from "~/components/text_area/text_area";
 import { TextInput } from "~/components/text_input/text_input";
 import { prisma } from "~/db.server";
 import { Prisma } from "~/generated/prisma/client";
+import { getInstance, getLocale } from "~/i18n/middleware.server";
 import { requireUserId } from "~/session.server";
 import {
   SLUG_PATTERN,
@@ -17,15 +19,19 @@ import {
 
 import type { Route } from "./+types/new";
 
-export const meta: Route.MetaFunction = () => [{ title: "Start a community" }];
+export const meta: Route.MetaFunction = ({ loaderData }) => [
+  { title: loaderData?.title },
+];
 
-export const loader = async ({ request }: Route.LoaderArgs) => {
+export const loader = async ({ request, context }: Route.LoaderArgs) => {
   await requireUserId(request);
-  return null;
+  const t = getInstance(context).getFixedT(getLocale(context), "communities");
+  return { title: t("meta.startACommunity") };
 };
 
-export const action = async ({ request }: Route.ActionArgs) => {
+export const action = async ({ request, context }: Route.ActionArgs) => {
   const userId = await requireUserId(request);
+  const t = getInstance(context).getFixedT(getLocale(context), "communities");
   const formData = await request.formData();
 
   const name = formData.get("name");
@@ -40,14 +46,12 @@ export const action = async ({ request }: Route.ActionArgs) => {
   const errors = {
     name:
       typeof name !== "string" || name.trim().length === 0
-        ? "Name is required"
+        ? t("errors.nameRequired")
         : null,
-    slug: validateSlug(slug)
-      ? null
-      : "Slug must be lowercase letters, numbers, and hyphens (3–50 characters)",
+    slug: validateSlug(slug) ? null : t("errors.slugPattern"),
     displayName:
       typeof displayName !== "string" || displayName.trim().length === 0
-        ? "Display name is required"
+        ? t("errors.displayNameRequired")
         : null,
   };
 
@@ -63,33 +67,19 @@ export const action = async ({ request }: Route.ActionArgs) => {
       : null;
   const trimmedDisplayName = (displayName as string).trim();
 
+  const slugTakenError = {
+    errors: { name: null, slug: t("errors.slugTaken"), displayName: null },
+  };
+
   if (trimmedSlug === "new") {
-    return data(
-      {
-        errors: {
-          name: null,
-          slug: "That URL is already taken. Try another.",
-          displayName: null,
-        },
-      },
-      { status: 400 },
-    );
+    return data(slugTakenError, { status: 400 });
   }
 
   const existing = await prisma.community.findUnique({
     where: { slug: trimmedSlug },
   });
   if (existing) {
-    return data(
-      {
-        errors: {
-          name: null,
-          slug: "That URL is already taken. Try another.",
-          displayName: null,
-        },
-      },
-      { status: 400 },
-    );
+    return data(slugTakenError, { status: 400 });
   }
 
   try {
@@ -119,16 +109,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"
     ) {
-      return data(
-        {
-          errors: {
-            name: null,
-            slug: "That URL is already taken. Try another.",
-            displayName: null,
-          },
-        },
-        { status: 400 },
-      );
+      return data(slugTakenError, { status: 400 });
     }
     throw error;
   }
@@ -146,54 +127,56 @@ export default function NewCommunityPage({ actionData }: Route.ComponentProps) {
     else if (actionData?.errors?.displayName) displayNameRef.current?.focus();
   }, [actionData]);
 
+  const { t } = useTranslation("communities");
+
   return (
     <main>
-      <h1>Start a community</h1>
+      <h1>{t("headings.startACommunity")}</h1>
       <Form method="post">
         <TextInput
           ref={nameRef}
-          label="Name"
+          label={t("labels.name")}
           name="name"
           type="text"
           errorMessage={actionData?.errors?.name ?? undefined}
         />
         <TextInput
           ref={slugRef}
-          label="URL"
+          label={t("labels.url")}
           name="slug"
           type="text"
           pattern={SLUG_PATTERN.source}
-          hintText="Lowercase letters, numbers, and hyphens only."
+          hintText={t("hints.url")}
           errorMessage={actionData?.errors?.slug ?? undefined}
         />
-        <TextArea label="Description (optional)" name="description" rows={4} />
+        <TextArea label={t("labels.description")} name="description" rows={4} />
         <RadioGroup
-          label="Visibility"
+          label={t("labels.visibility")}
           name="visibility"
           options={[
-            { value: "public", label: "Public" },
-            { value: "private", label: "Private" },
+            { value: "public", label: t("options.visibilityPublic") },
+            { value: "private", label: t("options.visibilityPrivate") },
           ]}
           defaultValue="public"
         />
         <RadioGroup
-          label="Who can join"
+          label={t("labels.joinPolicy")}
           name="joinPolicy"
           options={[
-            { value: "open", label: "Anyone can join" },
-            { value: "invite_only", label: "Invite only" },
+            { value: "open", label: t("options.joinPolicyOpen") },
+            { value: "invite_only", label: t("options.joinPolicyInviteOnly") },
           ]}
           defaultValue="open"
         />
         <TextInput
           ref={displayNameRef}
-          label="Your display name in this community"
+          label={t("labels.yourDisplayName")}
           name="displayName"
           type="text"
           defaultValue={suggestDisplayNameFromEmail(user.email)}
           errorMessage={actionData?.errors?.displayName ?? undefined}
         />
-        <Button type="submit">Create community</Button>
+        <Button type="submit">{t("buttons.createCommunity")}</Button>
       </Form>
     </main>
   );

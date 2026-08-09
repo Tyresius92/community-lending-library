@@ -1,13 +1,19 @@
+import { useTranslation } from "react-i18next";
+
 import { Link } from "~/components/link/link";
 import { prisma } from "~/db.server";
+import { getInstance, getLocale } from "~/i18n/middleware.server";
 import { requireUserId } from "~/session.server";
 
 import type { Route } from "./+types/communities";
 
-export const meta: Route.MetaFunction = () => [{ title: "Browse communities" }];
+export const meta: Route.MetaFunction = ({ loaderData }) => [
+  { title: loaderData?.title },
+];
 
-export const loader = async ({ request }: Route.LoaderArgs) => {
+export const loader = async ({ request, context }: Route.LoaderArgs) => {
   const userId = await requireUserId(request);
+  const t = getInstance(context).getFixedT(getLocale(context), "communities");
 
   const communities = await prisma.community.findMany({
     where: { visibility: "public", joinPolicy: "open", archivedAt: null },
@@ -22,6 +28,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   const memberOf = new Set(memberships.map((m) => m.communityId));
 
   return {
+    title: t("meta.browseCommunities"),
     communities: communities.map((c) => ({
       ...c,
       isMember: memberOf.has(c.id),
@@ -32,12 +39,13 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 export default function CommunitiesDirectory({
   loaderData,
 }: Route.ComponentProps) {
+  const { t } = useTranslation("communities");
   const { communities } = loaderData;
 
   return (
     <main>
-      <h1>Browse communities</h1>
-      {communities.length === 0 ? <p>No communities to browse yet.</p> : null}
+      <h1>{t("headings.browseCommunities")}</h1>
+      {communities.length === 0 ? <p>{t("empty.noCommunities")}</p> : null}
       <ul>
         {communities.map((community) => (
           <li key={community.id}>
@@ -47,7 +55,7 @@ export default function CommunitiesDirectory({
               </Link>
             </h2>
             {community.description ? <p>{community.description}</p> : null}
-            {community.isMember ? <p>Already a member.</p> : null}
+            {community.isMember ? <p>{t("notices.alreadyMember")}</p> : null}
           </li>
         ))}
       </ul>

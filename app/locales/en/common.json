@@ -1,0 +1,9 @@
+{
+  "siteName": "Community Lending Library",
+  "nav": {
+    "browseCommunities": "Browse communities",
+    "startACommunity": "Start a community",
+    "logIn": "Log in",
+    "logout": "Logout"
+  }
+}
