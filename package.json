@@ -12,8 +12,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "generate:colors": "tsx scripts/generate_colors.ts",
-    "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
-    "lint:fix": "eslint --fix --cache --cache-location ./node_modules/.cache/eslint .",
+    "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint --max-warnings=0 .",
+    "lint:fix": "eslint --cache --cache-location ./node_modules/.cache/eslint --fix --max-warnings=0 .",
     "postinstall": "prisma generate",
     "setup": "prisma generate && prisma migrate deploy && prisma db seed",
     "start:mocks": "cross-env NODE_ENV=production NODE_OPTIONS=\"--require ./mocks --require dotenv/config\" react-router-serve ./build/server/index.js",
@@ -25,15 +25,6 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
-  "eslintIgnore": [
-    "/node_modules",
-    "/build",
-    "/public/build",
-    "/postgres-data",
-    "/playwright-report",
-    "/test-results",
-    "/app/generated"
-  ],
   "dependencies": {
     "@prisma/adapter-pg": "7.9.0",
     "@prisma/client": "7.9.0",
@@ -69,27 +60,29 @@
     "@testing-library/dom": "10.4.1",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
-    "@types/eslint": "8.56.12",
     "@types/node": "20.19.43",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
-    "@typescript-eslint/eslint-plugin": "7.18.0",
-    "@typescript-eslint/parser": "7.18.0",
+    "@eslint/js": "9.39.4",
     "@vitejs/plugin-react": "5.2.0",
     "@vitest/browser-playwright": "4.1.10",
     "@vitest/coverage-v8": "4.1.10",
-    "eslint": "8.57.1",
+    "@vitest/eslint-plugin": "1.6.20",
+    "eslint": "9.39.4",
     "eslint-config-prettier": "9.1.2",
-    "eslint-import-resolver-typescript": "3.10.1",
+    "eslint-import-resolver-typescript": "4.4.5",
     "eslint-plugin-import": "2.32.0",
-    "eslint-plugin-jest": "28.14.0",
     "eslint-plugin-jest-dom": "5.5.0",
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-markdown": "5.1.0",
+    "eslint-plugin-no-secrets": "2.3.3",
+    "eslint-plugin-playwright": "2.10.4",
     "eslint-plugin-react": "7.37.5",
-    "eslint-plugin-react-hooks": "4.6.2",
+    "eslint-plugin-react-compiler": "19.1.0-rc.2",
+    "eslint-plugin-react-hooks": "7.1.1",
     "eslint-plugin-storybook": "10.5.7",
-    "eslint-plugin-testing-library": "6.5.0",
+    "eslint-plugin-testing-library": "7.16.2",
+    "globals": "17.7.0",
     "happy-dom": "20.11.1",
     "msw": "2.15.0",
     "npm-run-all2": "6.2.6",
@@ -98,11 +91,17 @@
     "storybook": "10.5.7",
     "tsx": "4.23.1",
     "typescript": "5.9.3",
+    "typescript-eslint": "8.62.0",
     "vite": "8.1.5",
     "vitest": "4.1.10"
   },
   "engines": {
     "node": "^20.19 || ^22.12 || >=24.0"
+  },
+  "overrides": {
+    "eslint-plugin-react-hooks": {
+      "zod-validation-error": "^4.0.0"
+    }
   },
   "allowScripts": {
     "@prisma/engines@7.9.0": true,
