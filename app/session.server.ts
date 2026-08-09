@@ -36,33 +36,12 @@ export async function getUser(request: Request) {
   const userId = await getUserId(request);
   if (userId === undefined) return null;
 
-  const user = await getUserById(userId);
-  if (user) {
-    return user;
-  }
-
-  throw await logout(request);
+  return getUserById(userId);
 }
 
-export async function requireUserId(
-  request: Request,
-  redirectTo: string = new URL(request.url).pathname,
-) {
-  const userId = await getUserId(request);
-  if (!userId) {
-    const searchParams = new URLSearchParams([["redirectTo", redirectTo]]);
-    throw redirect(`/login?${searchParams}`);
-  }
-  return userId;
-}
-
-export async function requireUser(request: Request) {
-  const userId = await requireUserId(request);
-
-  const user = await getUserById(userId);
-  if (user) return user;
-
-  throw await logout(request);
+export function loginRedirect(url: URL): Response {
+  const searchParams = new URLSearchParams([["redirectTo", url.pathname]]);
+  return redirect(`/login?${searchParams}`);
 }
 
 export async function createUserSession({

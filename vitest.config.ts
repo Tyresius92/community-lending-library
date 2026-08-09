@@ -7,7 +7,16 @@ import { fileURLToPath } from "node:url";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import react from "@vitejs/plugin-react";
 import { playwright } from "@vitest/browser-playwright";
+import dotenv from "dotenv";
+import invariant from "tiny-invariant";
 import { defineConfig } from "vitest/config";
+
+dotenv.config({ path: ".env.test", override: true });
+
+invariant(
+  process.env.DATABASE_POOLER_URL,
+  "DATABASE_POOLER_URL must be set (check .env.test)",
+);
 
 const dirname =
   typeof __dirname !== "undefined"
@@ -28,7 +37,11 @@ export default defineConfig({
           globals: true,
           environment: "happy-dom",
           setupFiles: ["./test/setup-test-env.ts"],
+          globalSetup: ["./test/db_global_setup.ts"],
           include: ["./app/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+          env: {
+            DATABASE_POOLER_URL: process.env.DATABASE_POOLER_URL,
+          },
         },
       },
       {

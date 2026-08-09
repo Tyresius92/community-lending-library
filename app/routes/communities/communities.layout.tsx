@@ -3,12 +3,13 @@ import { Outlet } from "react-router";
 
 import { Link } from "~/components/link/link";
 import { prisma } from "~/db.server";
-import { requireUserId } from "~/session.server";
+import { getUserId, loginRedirect } from "~/session.server";
 
 import type { Route } from "./+types/communities.layout";
 
-export const loader = async ({ request }: Route.LoaderArgs) => {
-  const userId = await requireUserId(request);
+export const loader = async ({ request, url }: Route.LoaderArgs) => {
+  const userId = await getUserId(request);
+  if (!userId) return loginRedirect(url);
 
   const memberships = await prisma.communityMembership.findMany({
     where: { userId },

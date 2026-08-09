@@ -3,12 +3,14 @@ import { isRouteErrorResponse, Outlet, useRouteError } from "react-router";
 import invariant from "tiny-invariant";
 
 import { prisma } from "~/db.server";
-import { requireUserId } from "~/session.server";
+import { getUserId, loginRedirect } from "~/session.server";
 
 import type { Route } from "./+types/$communitySlug.layout";
 
-export const loader = async ({ params, request }: Route.LoaderArgs) => {
-  const userId = await requireUserId(request);
+export const loader = async ({ params, request, url }: Route.LoaderArgs) => {
+  const userId = await getUserId(request);
+  if (!userId) return loginRedirect(url);
+
   invariant(params.communitySlug, "communitySlug not found");
 
   const community = await prisma.community.findFirst({

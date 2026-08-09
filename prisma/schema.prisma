@@ -7,6 +7,11 @@ generator client {
   output   = "../app/generated/prisma"
 }
 
+generator fabbrica {
+  provider = "prisma-fabbrica"
+  output   = "../app/generated/fabbrica"
+}
+
 model User {
   id    String @id @default(cuid())
   email String @unique

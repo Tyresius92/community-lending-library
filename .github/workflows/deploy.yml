@@ -96,6 +96,15 @@ jobs:
       - name: 🎭 Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
+      - name: 🐳 Docker compose
+        run: docker compose up -d --wait
+
+      - name: 🩺 Dump Postgres diagnostics on failure
+        if: always()
+        run: |
+          docker inspect --format='{{json .State.Health}}' $(docker compose ps -q postgres) || true
+          docker compose logs postgres || true
+
       - name: ⚡ Run vitest (unit + Storybook a11y)
         run: npm run test -- --coverage
 

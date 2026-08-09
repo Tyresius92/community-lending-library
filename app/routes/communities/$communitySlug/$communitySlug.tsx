@@ -7,7 +7,7 @@ import { TextInput } from "~/components/text_input/text_input";
 import { prisma } from "~/db.server";
 import { Prisma } from "~/generated/prisma/client";
 import { getInstance, getLocale } from "~/i18n/middleware.server";
-import { requireUserId } from "~/session.server";
+import { getUserId, loginRedirect } from "~/session.server";
 import { suggestDisplayNameFromEmail, useUser } from "~/utils";
 
 import type { Route } from "./+types/$communitySlug";
@@ -16,8 +16,10 @@ export const meta: Route.MetaFunction = ({ loaderData }) => [
   { title: loaderData?.community.name ?? "Community" },
 ];
 
-export const loader = async ({ params, request }: Route.LoaderArgs) => {
-  const userId = await requireUserId(request);
+export const loader = async ({ params, request, url }: Route.LoaderArgs) => {
+  const userId = await getUserId(request);
+  if (!userId) return loginRedirect(url);
+
   invariant(params.communitySlug, "communitySlug not found");
 
   const community = await prisma.community.findFirst({
@@ -74,8 +76,11 @@ export const action = async ({
   params,
   request,
   context,
+  url,
 }: Route.ActionArgs) => {
-  const userId = await requireUserId(request);
+  const userId = await getUserId(request);
+  if (!userId) return loginRedirect(url);
+
   invariant(params.communitySlug, "communitySlug not found");
   const t = getInstance(context).getFixedT(getLocale(context), "communities");
 

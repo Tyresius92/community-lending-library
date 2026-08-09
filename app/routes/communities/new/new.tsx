@@ -9,7 +9,7 @@ import { TextInput } from "~/components/text_input/text_input";
 import { prisma } from "~/db.server";
 import { Prisma } from "~/generated/prisma/client";
 import { getInstance, getLocale } from "~/i18n/middleware.server";
-import { requireUserId } from "~/session.server";
+import { getUserId, loginRedirect } from "~/session.server";
 import {
   SLUG_PATTERN,
   suggestDisplayNameFromEmail,
@@ -23,14 +23,18 @@ export const meta: Route.MetaFunction = ({ loaderData }) => [
   { title: loaderData?.title },
 ];
 
-export const loader = async ({ request, context }: Route.LoaderArgs) => {
-  await requireUserId(request);
+export const loader = async ({ request, context, url }: Route.LoaderArgs) => {
+  const userId = await getUserId(request);
+  if (!userId) return loginRedirect(url);
+
   const t = getInstance(context).getFixedT(getLocale(context), "communities");
   return { title: t("meta.startACommunity") };
 };
 
-export const action = async ({ request, context }: Route.ActionArgs) => {
-  const userId = await requireUserId(request);
+export const action = async ({ request, context, url }: Route.ActionArgs) => {
+  const userId = await getUserId(request);
+  if (!userId) return loginRedirect(url);
+
   const t = getInstance(context).getFixedT(getLocale(context), "communities");
   const formData = await request.formData();
 

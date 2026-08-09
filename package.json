@@ -21,7 +21,7 @@
     "test:e2e:run": "npx playwright test",
     "test:db:reset": "node --env-file=.env.test ./node_modules/.bin/prisma migrate reset --force",
     "typecheck": "react-router typegen && tsc",
-    "validate": "npm-run-all --parallel \"test -- --run\" lint typecheck test:e2e:run",
+    "validate": "npm-run-all --parallel \"test -- --run\" lint typecheck && npm run test:e2e:run",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -31,7 +31,8 @@
     "/public/build",
     "/postgres-data",
     "/playwright-report",
-    "/test-results"
+    "/test-results",
+    "/app/generated"
   ],
   "dependencies": {
     "@prisma/adapter-pg": "7.9.0",
@@ -55,7 +56,9 @@
   "devDependencies": {
     "@axe-core/playwright": "4.12.1",
     "@chromatic-com/storybook": "5.3.0",
+    "@faker-js/faker": "10.5.0",
     "@playwright/test": "1.62.0",
+    "@quramy/prisma-fabbrica": "2.3.3",
     "@radix-ui/colors": "3.0.0",
     "@react-router/dev": "8.3.0",
     "@storybook/addon-a11y": "10.5.7",
