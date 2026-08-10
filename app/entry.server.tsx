@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-router";
 /**
  * By default, Remix will handle generating the HTTP Response for you.
  * You are free to delete this file if you'd like to, but if you ever want it revealed again, you can run `npx remix reveal` ✨
@@ -15,9 +16,13 @@ import type { EntryContext, RouterContextProvider } from "react-router";
 
 import { getInstance } from "~/i18n/middleware.server";
 
+export const handleError = Sentry.createSentryHandleError({
+  logErrors: false,
+});
+
 export const streamTimeout = 5000;
 
-export default function handleRequest(
+async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
@@ -122,3 +127,5 @@ function handleBrowserRequest(
     setTimeout(abort, streamTimeout + 1000);
   });
 }
+export default Sentry.wrapSentryHandleRequest(handleRequest);
+export const instrumentations = [Sentry.createSentryServerInstrumentation()];
