@@ -1,5 +1,10 @@
 {
-  "include": ["**/*.ts", "**/*.tsx", ".react-router/types/**/*", ".storybook/**/*"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".react-router/types/**/*",
+    ".storybook/**/*"
+  ],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2020"],
     "types": ["@react-router/node", "vite/client", "vitest/globals"],

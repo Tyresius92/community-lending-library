@@ -33,15 +33,13 @@ export function safeRedirect(
  * @param {string} id The route id
  * @returns {JSON|undefined} The router data or undefined if not found
  */
-export function useMatchesData(
-  id: string,
-): Record<string, unknown> | undefined {
+export function useMatchesData(id: string): unknown {
   const matchingRoutes = useMatches();
   const route = useMemo(
     () => matchingRoutes.find((route) => route.id === id),
     [matchingRoutes, id],
   );
-  return route?.loaderData as Record<string, unknown>;
+  return route?.loaderData;
 }
 
 function isUser(user: unknown): user is User {
@@ -55,7 +53,12 @@ function isUser(user: unknown): user is User {
 
 export function useOptionalUser(): User | undefined {
   const data = useMatchesData("root");
-  if (!data || !isUser(data.user)) {
+  if (
+    !data ||
+    typeof data !== "object" ||
+    !("user" in data) ||
+    !isUser(data.user)
+  ) {
     return undefined;
   }
   return data.user;

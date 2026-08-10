@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { data, redirect, Form } from "react-router";
+import invariant from "tiny-invariant";
 
 import { Button } from "~/components/button/button";
 import { RadioGroup } from "~/components/radio_group/radio_group";
@@ -20,12 +21,14 @@ import {
 import type { Route } from "./+types/new";
 
 export const meta: Route.MetaFunction = ({ loaderData }) => [
-  { title: loaderData?.title },
+  { title: loaderData.title },
 ];
 
 export const loader = async ({ request, context, url }: Route.LoaderArgs) => {
   const userId = await getUserId(request);
-  if (!userId) return loginRedirect(url);
+  if (!userId) {
+    return loginRedirect(url);
+  }
 
   const t = getInstance(context).getFixedT(getLocale(context), "communities");
   return { title: t("meta.startACommunity") };
@@ -33,7 +36,9 @@ export const loader = async ({ request, context, url }: Route.LoaderArgs) => {
 
 export const action = async ({ request, context, url }: Route.ActionArgs) => {
   const userId = await getUserId(request);
-  if (!userId) return loginRedirect(url);
+  if (!userId) {
+    return loginRedirect(url);
+  }
 
   const t = getInstance(context).getFixedT(getLocale(context), "communities");
   const formData = await request.formData();
@@ -63,13 +68,20 @@ export const action = async ({ request, context, url }: Route.ActionArgs) => {
     return data({ errors }, { status: 400 });
   }
 
-  const trimmedName = (name as string).trim();
-  const trimmedSlug = slug as string;
+  invariant(typeof name === "string", "name should have passed validation");
+  invariant(validateSlug(slug), "slug should have passed validation");
+  invariant(
+    typeof displayName === "string",
+    "displayName should have passed validation",
+  );
+
+  const trimmedName = name.trim();
+  const trimmedSlug = slug;
   const trimmedDescription =
     typeof description === "string" && description.trim().length > 0
       ? description.trim()
       : null;
-  const trimmedDisplayName = (displayName as string).trim();
+  const trimmedDisplayName = displayName.trim();
 
   const slugTakenError = {
     errors: { name: null, slug: t("errors.slugTaken"), displayName: null },
@@ -126,9 +138,13 @@ export default function NewCommunityPage({ actionData }: Route.ComponentProps) {
   const displayNameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (actionData?.errors?.name) nameRef.current?.focus();
-    else if (actionData?.errors?.slug) slugRef.current?.focus();
-    else if (actionData?.errors?.displayName) displayNameRef.current?.focus();
+    if (actionData?.errors.name) {
+      nameRef.current?.focus();
+    } else if (actionData?.errors.slug) {
+      slugRef.current?.focus();
+    } else if (actionData?.errors.displayName) {
+      displayNameRef.current?.focus();
+    }
   }, [actionData]);
 
   const { t } = useTranslation("communities");
@@ -142,7 +158,7 @@ export default function NewCommunityPage({ actionData }: Route.ComponentProps) {
           label={t("labels.name")}
           name="name"
           type="text"
-          errorMessage={actionData?.errors?.name ?? undefined}
+          errorMessage={actionData?.errors.name ?? undefined}
         />
         <TextInput
           ref={slugRef}
@@ -151,7 +167,7 @@ export default function NewCommunityPage({ actionData }: Route.ComponentProps) {
           type="text"
           pattern={SLUG_PATTERN.source}
           hintText={t("hints.url")}
-          errorMessage={actionData?.errors?.slug ?? undefined}
+          errorMessage={actionData?.errors.slug ?? undefined}
         />
         <TextArea label={t("labels.description")} name="description" rows={4} />
         <RadioGroup
@@ -178,7 +194,7 @@ export default function NewCommunityPage({ actionData }: Route.ComponentProps) {
           name="displayName"
           type="text"
           defaultValue={suggestDisplayNameFromEmail(user.email)}
-          errorMessage={actionData?.errors?.displayName ?? undefined}
+          errorMessage={actionData?.errors.displayName ?? undefined}
         />
         <Button type="submit">{t("buttons.createCommunity")}</Button>
       </Form>

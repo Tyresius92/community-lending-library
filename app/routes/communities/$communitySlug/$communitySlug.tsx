@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import { data, redirect, Form } from "react-router";
-import invariant from "tiny-invariant";
 
 import { Button } from "~/components/button/button";
 import { TextInput } from "~/components/text_input/text_input";
@@ -13,14 +12,14 @@ import { suggestDisplayNameFromEmail, useUser } from "~/utils";
 import type { Route } from "./+types/$communitySlug";
 
 export const meta: Route.MetaFunction = ({ loaderData }) => [
-  { title: loaderData?.community.name ?? "Community" },
+  { title: loaderData.community.name },
 ];
 
 export const loader = async ({ params, request, url }: Route.LoaderArgs) => {
   const userId = await getUserId(request);
-  if (!userId) return loginRedirect(url);
-
-  invariant(params.communitySlug, "communitySlug not found");
+  if (!userId) {
+    return loginRedirect(url);
+  }
 
   const community = await prisma.community.findFirst({
     where: { slug: params.communitySlug, archivedAt: null },
@@ -79,9 +78,10 @@ export const action = async ({
   url,
 }: Route.ActionArgs) => {
   const userId = await getUserId(request);
-  if (!userId) return loginRedirect(url);
+  if (!userId) {
+    return loginRedirect(url);
+  }
 
-  invariant(params.communitySlug, "communitySlug not found");
   const t = getInstance(context).getFixedT(getLocale(context), "communities");
 
   const formData = await request.formData();
@@ -97,11 +97,7 @@ export const action = async ({
   const community = await prisma.community.findFirst({
     where: { slug: params.communitySlug, archivedAt: null },
   });
-  if (
-    !community ||
-    community.visibility !== "public" ||
-    community.joinPolicy !== "open"
-  ) {
+  if (community?.visibility !== "public" || community.joinPolicy !== "open") {
     throw new Response("Not Found", { status: 404 });
   }
 
@@ -169,7 +165,7 @@ export default function CommunityOverview({
             name="displayName"
             type="text"
             defaultValue={suggestDisplayNameFromEmail(user.email)}
-            errorMessage={actionData?.errors?.displayName ?? undefined}
+            errorMessage={actionData?.errors.displayName ?? undefined}
           />
           <Button type="submit">{t("buttons.joinCommunity")}</Button>
         </Form>

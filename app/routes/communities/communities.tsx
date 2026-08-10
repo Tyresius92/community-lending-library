@@ -8,12 +8,14 @@ import { getUserId, loginRedirect } from "~/session.server";
 import type { Route } from "./+types/communities";
 
 export const meta: Route.MetaFunction = ({ loaderData }) => [
-  { title: loaderData?.title },
+  { title: loaderData.title },
 ];
 
 export const loader = async ({ request, context, url }: Route.LoaderArgs) => {
   const userId = await getUserId(request);
-  if (!userId) return loginRedirect(url);
+  if (!userId) {
+    return loginRedirect(url);
+  }
 
   const t = getInstance(context).getFixedT(getLocale(context), "communities");
 

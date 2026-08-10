@@ -26,7 +26,9 @@ import { getClientIp, isRateLimited } from "~/utils/rate_limit.server";
 
 export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const userId = await getUserId(request);
-  if (userId) return redirect("/");
+  if (userId) {
+    return redirect("/");
+  }
 
   const t = getInstance(context).getFixedT(getLocale(context), "login");
   const magicLinkErrorMessages: Record<string, string> = {
@@ -75,6 +77,7 @@ export const action = async ({ request, context }: ActionFunctionArgs) => {
   magicLinkUrl.searchParams.set("redirectTo", redirectTo);
 
   if (process.env.NODE_ENV === "development") {
+    // eslint-disable-next-line no-console
     console.log(magicLinkUrl.toString());
   }
 
@@ -94,13 +97,13 @@ export const meta: MetaFunction<typeof loader> = ({ loaderData }) => [
 export default function LoginPage() {
   const { t } = useTranslation("login");
   const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") || "/communities";
+  const redirectTo = searchParams.get("redirectTo") ?? "/communities";
   const { magicLinkErrorMessage } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const emailRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (actionData?.errors?.email) {
+    if (actionData?.errors.email) {
       emailRef.current?.focus();
     }
   }, [actionData]);
@@ -129,10 +132,10 @@ export default function LoginPage() {
                 name="email"
                 type="email"
                 autoComplete="email"
-                aria-invalid={actionData?.errors?.email ? true : undefined}
+                aria-invalid={actionData?.errors.email ? true : undefined}
                 aria-describedby="email-error"
               />
-              {actionData?.errors?.email ? (
+              {actionData?.errors.email ? (
                 <div id="email-error">{actionData.errors.email}</div>
               ) : null}
             </div>

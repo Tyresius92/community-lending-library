@@ -11,8 +11,8 @@ const resources = { en } satisfies Resource;
 
 export default resources;
 
-export const supportedLngs = Object.keys(
-  resources,
-) as (keyof typeof resources)[];
+export const supportedLngs =
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Object.keys is typed as returning string[]; there's no sound way to recover the literal key type without a cast.
+  Object.keys(resources) as (keyof typeof resources)[];
 export const fallbackLng: (typeof supportedLngs)[number] = "en";
 export const defaultNS = "common";

@@ -104,7 +104,9 @@ export type BoxProps = BlockBoxProps | FlexBoxProps;
 function toBreakpointMap(
   value: SpaceProp | undefined,
 ): Partial<Record<SpacingBreakpoint, SpaceOption>> | undefined {
-  if (value === undefined) return undefined;
+  if (value === undefined) {
+    return undefined;
+  }
   return typeof value === "number" ? { xs: value } : value;
 }
 

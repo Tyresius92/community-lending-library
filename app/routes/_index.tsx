@@ -4,13 +4,13 @@ import { getInstance, getLocale } from "~/i18n/middleware.server";
 
 import type { Route } from "./+types/_index";
 
-export const loader = async ({ context }: Route.LoaderArgs) => {
+export const loader = ({ context }: Route.LoaderArgs) => {
   const t = getInstance(context).getFixedT(getLocale(context), "home");
   return { title: t("meta.title") };
 };
 
 export const meta: Route.MetaFunction = ({ loaderData }) => [
-  { title: loaderData?.title },
+  { title: loaderData.title },
 ];
 
 export default function Index() {

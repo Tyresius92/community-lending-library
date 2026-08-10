@@ -103,10 +103,14 @@ Emails are a separate, deliberately decoupled i18n path: `app/mailer.server.ts` 
 
 ```ts
 const userId = await getUserId(request);
-if (!userId) return loginRedirect(url);
+if (!userId) {
+  return loginRedirect(url);
+}
 
 const found = await getCommunityMembership(userId, params.communitySlug);
-if (!found) return new Response(null, { status: 404 });
+if (!found) {
+  return new Response(null, { status: 404 });
+}
 
 if (!meetsMinRole(found.membership.role, "admin")) {
   return new Response(null, { status: 403 });

@@ -44,9 +44,10 @@ export const CssCheck: Story = {
   },
   play: async ({ canvasElement }) => {
     const box = canvasElement.querySelector("div");
+    if (!box) {
+      throw new Error("expected a div to be rendered");
+    }
     // colors.css sets --color-sand-12: #21201c
-    await expect(getComputedStyle(box as HTMLElement).backgroundColor).toBe(
-      "rgb(33, 32, 28)",
-    );
+    await expect(getComputedStyle(box).backgroundColor).toBe("rgb(33, 32, 28)");
   },
 };

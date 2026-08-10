@@ -23,7 +23,7 @@ function getPrismaClient() {
   });
   const client = new PrismaClient({ adapter });
   // connect eagerly
-  client.$connect();
+  void client.$connect();
 
   return client;
 }

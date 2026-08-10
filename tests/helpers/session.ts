@@ -1,10 +1,10 @@
 import type { BrowserContext } from "@playwright/test";
 import dotenv from "dotenv";
 
-dotenv.config({ path: ".env.test", override: true });
-
 import { findOrCreateUserByEmail } from "~/models/user.server";
 import { createUserSession } from "~/session.server";
+
+dotenv.config({ path: ".env.test", override: true });
 
 export async function loginAsNewUser(context: BrowserContext, email: string) {
   const user = await findOrCreateUserByEmail(email);

@@ -22,12 +22,16 @@ export async function getCommunityMembership(
     where: { slug: communitySlug, archivedAt: null },
     select: { id: true, name: true, slug: true, visibility: true },
   });
-  if (!community) return null;
+  if (!community) {
+    return null;
+  }
 
   const membership = await prisma.communityMembership.findUnique({
     where: { userId_communityId: { userId, communityId: community.id } },
   });
-  if (!membership) return null;
+  if (!membership) {
+    return null;
+  }
 
   return { community, membership };
 }

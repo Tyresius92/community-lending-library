@@ -121,7 +121,12 @@ export default tseslint.config(
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
-      "@typescript-eslint/only-throw-error": "error",
+      "@typescript-eslint/only-throw-error": [
+        "error",
+        // React Router's error-boundary mechanism (isRouteErrorResponse)
+        // depends on loaders/actions throwing a real Response.
+        { allow: [{ from: "lib", name: "Response" }] },
+      ],
       "@typescript-eslint/restrict-template-expressions": [
         "error",
         {
@@ -220,4 +225,14 @@ export default tseslint.config(
   },
 
   prettier,
+
+  // eslint-config-prettier turns `curly` off by default (some of its
+  // variants can conflict with Prettier's output), but the "all" variant
+  // used here doesn't — so re-assert it after prettier to keep it enabled.
+  {
+    files: ["**/*.{js,jsx,ts,tsx}"],
+    rules: {
+      curly: ["error", "all"],
+    },
+  },
 );

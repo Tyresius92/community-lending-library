@@ -53,7 +53,7 @@ test("logging out returns the nav to its logged-out state", async ({
 
   await expect(page).toHaveURL("/");
   await expect(nav.getByRole("link", { name: "Log in" })).toBeVisible();
-  await expect(nav.getByText(email)).not.toBeVisible();
+  await expect(nav.getByText(email)).toBeHidden();
 
   await expectNoAxeViolations(page);
 

@@ -143,14 +143,12 @@ function generateColorsCss(): string {
   const light = collectGroups("light");
   const dark = collectGroups("dark");
 
-  return (
-    [
-      renderSelectorBlock(":root,\n.light", light),
-      renderP3Block(":root,\n.light", light),
-      renderSelectorBlock(".dark,\nhtml.dark", dark),
-      renderP3Block(".dark,\nhtml.dark", dark),
-    ].join("\n\n") + "\n"
-  );
+  return `${[
+    renderSelectorBlock(":root,\n.light", light),
+    renderP3Block(":root,\n.light", light),
+    renderSelectorBlock(".dark,\nhtml.dark", dark),
+    renderP3Block(".dark,\nhtml.dark", dark),
+  ].join("\n\n")}\n`;
 }
 
 function renderObjectBody(groups: ScaleGroup[], pick: keyof ScaleGroup) {
@@ -178,4 +176,5 @@ function generateColorsTs(): string {
 fs.writeFileSync(path.join(OUTPUT_DIR, "colors.css"), generateColorsCss());
 fs.writeFileSync(path.join(OUTPUT_DIR, "colors.ts"), generateColorsTs());
 
+// eslint-disable-next-line no-console
 console.log("Generated colors.css and colors.ts from @radix-ui/colors");

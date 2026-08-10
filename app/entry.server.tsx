@@ -69,7 +69,7 @@ function handleBotRequest(
           pipe(body);
         },
         onShellError(error: unknown) {
-          reject(error);
+          reject(error instanceof Error ? error : new Error(String(error)));
         },
         onError(error: unknown) {
           responseStatusCode = 500;
@@ -78,7 +78,7 @@ function handleBotRequest(
       },
     );
 
-    +setTimeout(abort, streamTimeout + 1000);
+    setTimeout(abort, streamTimeout + 1000);
   });
 }
 
@@ -110,7 +110,7 @@ function handleBrowserRequest(
           pipe(body);
         },
         onShellError(error: unknown) {
-          reject(error);
+          reject(error instanceof Error ? error : new Error(String(error)));
         },
         onError(error: unknown) {
           console.error(error);
@@ -119,6 +119,6 @@ function handleBrowserRequest(
       },
     );
 
-    +setTimeout(abort, streamTimeout + 1000);
+    setTimeout(abort, streamTimeout + 1000);
   });
 }

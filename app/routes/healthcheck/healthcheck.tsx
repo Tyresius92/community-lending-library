@@ -9,9 +9,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const url = new URL("/", `http://${host}`);
 
     const response = await fetch(url.toString(), { method: "HEAD" });
-    if (!response.ok) return Promise.reject(response);
+    if (!response.ok) {
+      throw new Error(
+        `healthcheck fetch failed with status ${response.status}`,
+      );
+    }
     return new Response("OK");
   } catch (error: unknown) {
+    // eslint-disable-next-line no-console
     console.log("healthcheck ❌", { error });
     return new Response("ERROR", { status: 500 });
   }

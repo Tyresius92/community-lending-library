@@ -110,12 +110,12 @@ describe("responsive spacing", () => {
 
   test("applies the .box class when spacing props are provided", () => {
     render(<Box pb={8}>content</Box>);
-    expect(screen.getByText("content")).toHaveClass(styles.box!);
+    expect(screen.getByText("content")).toHaveClass(styles.box);
   });
 
   test("does not apply the .box class when no spacing props are provided", () => {
     render(<Box bg="sand-3">content</Box>);
-    expect(screen.getByText("content")).not.toHaveClass(styles.box!);
+    expect(screen.getByText("content")).not.toHaveClass(styles.box);
   });
 });
 

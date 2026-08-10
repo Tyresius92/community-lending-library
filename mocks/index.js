@@ -25,6 +25,7 @@ const resendHandler = mswHttp.post(
 const server = setupServer(...miscHandlers, resendHandler);
 
 server.listen({ onUnhandledRequest: "bypass" });
+// eslint-disable-next-line no-console
 console.info("🔶 Mock server running");
 
 // Tiny inspection server so e2e tests can retrieve the magic-link URL from the

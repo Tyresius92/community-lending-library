@@ -29,9 +29,7 @@ describe("getCommunityMembership", () => {
   it("returns null when the community does not exist", async () => {
     const user = await UserFactory.create();
 
-    expect(
-      await getCommunityMembership(user.id, "does-not-exist"),
-    ).toBeNull();
+    expect(await getCommunityMembership(user.id, "does-not-exist")).toBeNull();
   });
 
   it("returns null when the community is archived", async () => {

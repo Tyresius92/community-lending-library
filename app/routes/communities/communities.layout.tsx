@@ -9,7 +9,9 @@ import type { Route } from "./+types/communities.layout";
 
 export const loader = async ({ request, url }: Route.LoaderArgs) => {
   const userId = await getUserId(request);
-  if (!userId) return loginRedirect(url);
+  if (!userId) {
+    return loginRedirect(url);
+  }
 
   const memberships = await prisma.communityMembership.findMany({
     where: { userId },
