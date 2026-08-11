@@ -33,6 +33,9 @@ jobs:
       - name: 📥 Install deps
         run: npm install
 
+      - name: 🏗️ Generate React Router types
+        run: npx react-router typegen
+
       - name: 🔬 Lint
         run: npm run lint
 
