@@ -13,7 +13,33 @@ export default [
     route(
       ":communitySlug",
       "routes/communities/$communitySlug/$communitySlug.layout.tsx",
-      [index("routes/communities/$communitySlug/$communitySlug.tsx")],
+      [
+        index("routes/communities/$communitySlug/$communitySlug.tsx"),
+        route(
+          "items",
+          "routes/communities/$communitySlug/items/items.layout.tsx",
+          [
+            index("routes/communities/$communitySlug/items/items.tsx"),
+            route(
+              "new",
+              "routes/communities/$communitySlug/items/new/new.tsx",
+            ),
+            route(
+              ":itemId",
+              "routes/communities/$communitySlug/items/$itemId/$itemId.tsx",
+            ),
+            route(
+              ":itemId/edit",
+              "routes/communities/$communitySlug/items/$itemId/edit/edit.tsx",
+            ),
+          ],
+        ),
+        route(
+          "members",
+          "routes/communities/$communitySlug/members/members.tsx",
+        ),
+        route("loans", "routes/communities/$communitySlug/loans/loans.tsx"),
+      ],
     ),
   ]),
 ] satisfies RouteConfig;
