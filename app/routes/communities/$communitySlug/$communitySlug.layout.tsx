@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { isRouteErrorResponse, Outlet, useRouteError } from "react-router";
 
+import { Link } from "~/components/link/link";
 import { prisma } from "~/db.server";
 import { getUserId, loginRedirect } from "~/session.server";
 
@@ -33,10 +34,31 @@ export const loader = async ({ params, request, url }: Route.LoaderArgs) => {
 };
 
 export default function CommunityLayout({ loaderData }: Route.ComponentProps) {
+  const { t } = useTranslation("communities");
+  const { slug } = loaderData.community;
+
   return (
     <main>
       <header>
         <h1>{loaderData.community.name}</h1>
+        <nav aria-label={t("nav.communitySections")}>
+          <ul>
+            <li>
+              <Link to={`/communities/${slug}`}>{t("nav.overview")}</Link>
+            </li>
+            <li>
+              <Link to={`/communities/${slug}/items`}>{t("nav.items")}</Link>
+            </li>
+            <li>
+              <Link to={`/communities/${slug}/members`}>
+                {t("nav.members")}
+              </Link>
+            </li>
+            <li>
+              <Link to={`/communities/${slug}/loans`}>{t("nav.loans")}</Link>
+            </li>
+          </ul>
+        </nav>
       </header>
       <Outlet />
     </main>

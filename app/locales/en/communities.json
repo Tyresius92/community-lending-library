@@ -9,7 +9,12 @@
     "members": "Members"
   },
   "nav": {
-    "yourCommunities": "Your communities"
+    "yourCommunities": "Your communities",
+    "communitySections": "Community sections",
+    "overview": "Overview",
+    "items": "Items",
+    "members": "Members",
+    "loans": "Loans"
   },
   "empty": {
     "noCommunities": "No communities to browse yet."
