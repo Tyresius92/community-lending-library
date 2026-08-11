@@ -2,11 +2,13 @@ import { useTranslation } from "react-i18next";
 import type { LinksFunction } from "react-router";
 import {
   Form,
+  isRouteErrorResponse,
   Links,
   Meta,
   Outlet,
   ScrollRestoration,
   Scripts,
+  useRouteError,
 } from "react-router";
 
 import colorsHref from "~/components/_global_styles/colors.css?url";
@@ -14,6 +16,7 @@ import cssResetHref from "~/components/_global_styles/css_reset.css?url";
 import spaceHref from "~/components/_global_styles/space.css?url";
 import { Button } from "~/components/button/button";
 import { i18nextMiddleware } from "~/i18n/middleware.server";
+import { logger } from "~/logger";
 import { getUser } from "~/session.server";
 
 import type { Route } from "./+types/root";
@@ -29,7 +32,9 @@ export const links: LinksFunction = () => [
 ];
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
-  return { user: await getUser(request) };
+  const user = await getUser(request);
+  logger.setUser(user ? { id: user.id } : null);
+  return { user };
 };
 
 export default function App({ loaderData }: Route.ComponentProps) {
@@ -73,5 +78,31 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <Scripts />
       </body>
     </html>
+  );
+}
+
+export function ErrorBoundary() {
+  const { t } = useTranslation("common");
+  const error = useRouteError();
+
+  if (error instanceof Error) {
+    logger.error(error);
+    return (
+      <div>{t("errors.unexpectedWithMessage", { message: error.message })}</div>
+    );
+  }
+
+  if (!isRouteErrorResponse(error)) {
+    return <h1>{t("errors.unknown")}</h1>;
+  }
+
+  if (error.status === 404) {
+    return <div>{t("errors.notFound")}</div>;
+  }
+
+  return (
+    <div>
+      {t("errors.unexpectedWithMessage", { message: error.statusText })}
+    </div>
   );
 }

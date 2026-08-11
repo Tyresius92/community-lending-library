@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/react-router";
 /**
  * By default, Remix will handle generating the HTTP Response for you.
  * You are free to delete this file if you'd like to, but if you ever want it revealed again, you can run `npx remix reveal` ✨
@@ -8,6 +7,11 @@ import * as Sentry from "@sentry/react-router";
 import { PassThrough } from "node:stream";
 
 import { createReadableStreamFromReadable } from "@react-router/node";
+import {
+  createSentryHandleError,
+  wrapSentryHandleRequest,
+  createSentryServerInstrumentation,
+} from "@sentry/react-router";
 import { isbot } from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
 import { I18nextProvider } from "react-i18next";
@@ -15,8 +19,10 @@ import { ServerRouter } from "react-router";
 import type { EntryContext, RouterContextProvider } from "react-router";
 
 import { getInstance } from "~/i18n/middleware.server";
+import { logger } from "~/logger";
+import { toError } from "~/utils/error.server";
 
-export const handleError = Sentry.createSentryHandleError({
+export const handleError = createSentryHandleError({
   logErrors: false,
 });
 
@@ -74,11 +80,11 @@ function handleBotRequest(
           pipe(body);
         },
         onShellError(error: unknown) {
-          reject(error instanceof Error ? error : new Error(String(error)));
+          reject(toError(error));
         },
         onError(error: unknown) {
           responseStatusCode = 500;
-          console.error(error);
+          logger.error(toError(error));
         },
       },
     );
@@ -115,10 +121,10 @@ function handleBrowserRequest(
           pipe(body);
         },
         onShellError(error: unknown) {
-          reject(error instanceof Error ? error : new Error(String(error)));
+          reject(toError(error));
         },
         onError(error: unknown) {
-          console.error(error);
+          logger.error(toError(error));
           responseStatusCode = 500;
         },
       },
@@ -127,5 +133,5 @@ function handleBrowserRequest(
     setTimeout(abort, streamTimeout + 1000);
   });
 }
-export default Sentry.wrapSentryHandleRequest(handleRequest);
-export const instrumentations = [Sentry.createSentryServerInstrumentation()];
+export default wrapSentryHandleRequest(handleRequest);
+export const instrumentations = [createSentryServerInstrumentation()];

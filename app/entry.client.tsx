@@ -1,10 +1,16 @@
-import * as Sentry from "@sentry/react-router";
 /**
  * By default, Remix will handle hydrating your app on the client for you.
  * You are free to delete this file if you'd like to, but if you ever want it revealed again, you can run `npx remix reveal` ✨
  * For more information, see https://remix.run/docs/en/main/file-conventions/entry.client
  */
 
+import {
+  createSentryClientInstrumentation,
+  init,
+  reactRouterTracingIntegration,
+  replayIntegration,
+  sentryOnError,
+} from "@sentry/react-router";
 import i18next from "i18next";
 import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
@@ -17,23 +23,35 @@ import resources, {
   supportedLngs,
 } from "~/i18n/resources";
 
-const tracing = Sentry.reactRouterTracingIntegration();
+const tracing = reactRouterTracingIntegration();
+const clientInstrumentation = createSentryClientInstrumentation();
 
-Sentry.init({
-  dsn: "https://15beb4037aabfb8389f303db56f72648@o4511593609297920.ingest.us.sentry.io/4511884767199232",
-  dataCollection: {
-    // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
-    // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#dataCollection
-    // userInfo: false,
-    // httpBodies: [],
-  },
-  integrations: [tracing, Sentry.replayIntegration()],
-  enableLogs: true,
-  tracesSampleRate: 1.0,
-  tracePropagationTargets: [/^\//, /^https:\/\/yourserver\.io\/api/],
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-});
+// Only initialize Sentry in a real deployed build (staging/production) — set
+// as a build-time env var per Fly app in the deploy workflow. This keeps
+// local dev and Playwright e2e runs from reporting to the live Sentry
+// project, and doubles as the "staging" vs "production" environment tag.
+const rawSentryEnvironment: unknown = import.meta.env.VITE_SENTRY_ENVIRONMENT;
+const sentryEnvironment =
+  typeof rawSentryEnvironment === "string" ? rawSentryEnvironment : undefined;
+
+if (sentryEnvironment) {
+  init({
+    dsn: "https://15beb4037aabfb8389f303db56f72648@o4511593609297920.ingest.us.sentry.io/4511884767199232",
+    environment: sentryEnvironment,
+    dataCollection: {
+      // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
+      // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#dataCollection
+      // userInfo: false,
+      // httpBodies: [],
+    },
+    integrations: [tracing, replayIntegration()],
+    enableLogs: true,
+    tracesSampleRate: 1.0,
+    tracePropagationTargets: [/^\//, /^https:\/\/yourserver\.io\/api/],
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+  });
+}
 
 // The server already resolved this request's locale (Accept-Language, via
 // remix-i18next's middleware) and baked it into the rendered `<html lang>`
@@ -64,8 +82,8 @@ void i18next
         <I18nextProvider i18n={i18next}>
           <StrictMode>
             <HydratedRouter
-              instrumentations={[tracing.clientInstrumentation]}
-              onError={Sentry.sentryOnError}
+              instrumentations={[clientInstrumentation]}
+              onError={sentryOnError}
             />
           </StrictMode>
         </I18nextProvider>,

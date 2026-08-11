@@ -1,35 +1,45 @@
 import * as Sentry from "@sentry/react-router";
 import { nodeProfilingIntegration } from "@sentry/profiling-node";
 
-Sentry.init({
-  dsn: "https://15beb4037aabfb8389f303db56f72648@o4511593609297920.ingest.us.sentry.io/4511884767199232",
+// Fly sets FLY_APP_NAME automatically on every deployed machine — only
+// present when this is actually running on Fly (staging/production), never
+// in local dev. Deriving "staging" vs "production" from it means we don't
+// need a separate secret to tell the two apart in Sentry.
+const flyAppName = process.env.FLY_APP_NAME;
 
-  dataCollection: {
-    // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
-    // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#dataCollection
-    // userInfo: false,
-    // httpBodies: [],
-  },
+if (flyAppName) {
+  Sentry.init({
+    dsn: "https://15beb4037aabfb8389f303db56f72648@o4511593609297920.ingest.us.sentry.io/4511884767199232",
 
-  // Enable logs to be sent to Sentry
-  enableLogs: true,
+    environment: flyAppName.endsWith("-staging") ? "staging" : "production",
 
-  integrations: [nodeProfilingIntegration()],
-  tracesSampleRate: 1.0, // Capture 100% of the transactions
-  profilesSampleRate: 1.0, // profile every transaction
+    dataCollection: {
+      // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
+      // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#dataCollection
+      // userInfo: false,
+      // httpBodies: [],
+    },
 
-  // Set up performance monitoring
-  beforeSend(event) {
-    // Filter out 404s from error reporting
-    if (event.exception) {
-      const error = event.exception.values?.[0];
-      if (
-        error?.type === "NotFoundException" ||
-        error?.value?.includes("404")
-      ) {
-        return null;
+    // Enable logs to be sent to Sentry
+    enableLogs: true,
+
+    integrations: [nodeProfilingIntegration()],
+    tracesSampleRate: 1.0, // Capture 100% of the transactions
+    profilesSampleRate: 1.0, // profile every transaction
+
+    // Set up performance monitoring
+    beforeSend(event) {
+      // Filter out 404s from error reporting
+      if (event.exception) {
+        const error = event.exception.values?.[0];
+        if (
+          error?.type === "NotFoundException" ||
+          error?.value?.includes("404")
+        ) {
+          return null;
+        }
       }
-    }
-    return event;
-  },
-});
+      return event;
+    },
+  });
+}

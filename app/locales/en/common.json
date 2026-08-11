@@ -5,5 +5,10 @@
     "startACommunity": "Start a community",
     "logIn": "Log in",
     "logout": "Logout"
+  },
+  "errors": {
+    "unexpectedWithMessage": "An unexpected error occurred: {{message}}",
+    "unknown": "Unknown Error",
+    "notFound": "Page not found"
   }
 }

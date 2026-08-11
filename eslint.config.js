@@ -206,9 +206,9 @@ export default tseslint.config(
     ...playwrightPlugin.configs["flat/recommended"],
   },
 
-  // Node files (mocks)
+  // Node files (mocks, Sentry server instrumentation entry point)
   {
-    files: ["mocks/**/*.js"],
+    files: ["mocks/**/*.js", "instrument.server.mjs"],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -216,9 +216,18 @@ export default tseslint.config(
     },
   },
 
-  // Server files — allow console
+  // Server files — allow console. app/logger.ts is the one non-".server"
+  // exception: it's isomorphic (used from client-reachable exports like
+  // root.tsx's ErrorBoundary, not just loaders/actions), and its dev-mode
+  // console.* fallback is the deliberate behavior backing the app's one
+  // centralized logger, not a stray debug call.
   {
-    files: ["**/*.server.{ts,tsx}", "**/*.server.test.{ts,tsx}"],
+    files: [
+      "**/*.server.{ts,tsx}",
+      "**/*.server.test.{ts,tsx}",
+      "app/logger.ts",
+      "app/logger.test.ts",
+    ],
     rules: {
       "no-console": "off",
     },

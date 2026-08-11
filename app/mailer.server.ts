@@ -2,6 +2,8 @@ import type { ReactElement } from "react";
 import { render } from "react-email";
 import { Resend } from "resend";
 
+import { logger } from "~/logger";
+
 const FROM_EMAIL =
   process.env.FROM_EMAIL ?? "Community Lending Library <onboarding@resend.dev>";
 
@@ -20,7 +22,7 @@ export async function sendEmail({ to, subject, react }: SendEmailOptions) {
   }
 
   if (!process.env.RESEND_API_KEY) {
-    console.warn(`RESEND_API_KEY not set — skipping email to ${to}`);
+    logger.warn("RESEND_API_KEY not set — skipping email", { to, subject });
     return;
   }
 

@@ -1,6 +1,9 @@
 // learn more: https://fly.io/docs/reference/configuration/#services-http_checks
 import type { LoaderFunctionArgs } from "react-router";
 
+import { logger } from "~/logger";
+import { toError } from "~/utils/error.server";
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const host =
     request.headers.get("X-Forwarded-Host") ?? request.headers.get("host");
@@ -16,8 +19,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     }
     return new Response("OK");
   } catch (error: unknown) {
-    // eslint-disable-next-line no-console
-    console.log("healthcheck ❌", { error });
+    logger.error(toError(error), { context: "healthcheck" });
     return new Response("ERROR", { status: 500 });
   }
 };

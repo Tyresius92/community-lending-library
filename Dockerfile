@@ -29,6 +29,12 @@ RUN npm prune --omit=dev
 # Build the app
 FROM base as build
 
+# VITE_SENTRY_ENVIRONMENT tags client-side Sentry events as staging/production
+# (differs per `flyctl deploy --app` invocation in the deploy workflow).
+# SENTRY_AUTH_TOKEN lets the Sentry Vite plugin upload source maps on build.
+ARG VITE_SENTRY_ENVIRONMENT
+ARG SENTRY_AUTH_TOKEN
+
 WORKDIR /myapp
 
 COPY --from=deps /myapp/node_modules /myapp/node_modules

@@ -1,5 +1,5 @@
-import { sentryOnBuildEnd } from "@sentry/react-router";
 import type { Config } from "@react-router/dev/config";
+import { sentryOnBuildEnd } from "@sentry/react-router";
 
 export default {
   ssr: true,
@@ -10,9 +10,9 @@ export default {
     buildManifest: buildManifest,
   }) => {
     await sentryOnBuildEnd({
-      viteConfig: viteConfig,
-      reactRouterConfig: reactRouterConfig,
-      buildManifest: buildManifest,
+      viteConfig,
+      reactRouterConfig,
+      buildManifest,
     });
   },
 } satisfies Config;
