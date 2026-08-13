@@ -23,9 +23,19 @@ if (flyAppName) {
     // Enable logs to be sent to Sentry
     enableLogs: true,
 
-    integrations: [nodeProfilingIntegration()],
-    tracesSampleRate: 1.0, // Capture 100% of the transactions
-    profilesSampleRate: 1.0, // profile every transaction
+    integrations: [
+      nodeProfilingIntegration(),
+      // Fly's health checker polls /healthcheck every 10s per machine (see
+      // fly.toml) — that's pure noise with no useful signal, and at 100%
+      // sampling was the single largest driver of our performance-unit
+      // consumption. Skip creating a transaction for it entirely rather
+      // than sampling it down, since it carries no diagnostic value.
+      Sentry.httpIntegration({
+        ignoreIncomingRequests: (url) => url.startsWith("/healthcheck"),
+      }),
+    ],
+    tracesSampleRate: 0.1,
+    profilesSampleRate: 0.1, // matches tracesSampleRate — profile the same fraction of sampled transactions
 
     // Set up performance monitoring
     beforeSend(event) {

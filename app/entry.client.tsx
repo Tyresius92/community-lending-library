@@ -46,7 +46,7 @@ if (sentryEnvironment) {
     },
     integrations: [tracing, replayIntegration()],
     enableLogs: true,
-    tracesSampleRate: 1.0,
+    tracesSampleRate: 0.1,
     tracePropagationTargets: [/^\//, /^https:\/\/yourserver\.io\/api/],
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
