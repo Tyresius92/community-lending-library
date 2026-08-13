@@ -15,6 +15,7 @@ export interface TextInputProps
     | "disabled"
     | "step"
     | "minLength"
+    | "maxLength"
   > {
   label: string;
   name: string;

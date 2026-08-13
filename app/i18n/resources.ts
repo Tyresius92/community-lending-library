@@ -3,9 +3,10 @@ import type { Resource } from "i18next";
 import common from "~/locales/en/common.json";
 import communities from "~/locales/en/communities.json";
 import home from "~/locales/en/home.json";
+import items from "~/locales/en/items.json";
 import login from "~/locales/en/login.json";
 
-const en = { common, home, login, communities };
+const en = { common, home, login, communities, items };
 
 const resources = { en } satisfies Resource;
 

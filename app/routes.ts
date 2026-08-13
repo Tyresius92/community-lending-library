@@ -21,16 +21,36 @@ export default [
           [
             index("routes/communities/$communitySlug/items/items.tsx"),
             route(
-              "new",
-              "routes/communities/$communitySlug/items/new/new.tsx",
-            ),
-            route(
               ":itemId",
               "routes/communities/$communitySlug/items/$itemId/$itemId.tsx",
             ),
+          ],
+        ),
+        route(
+          "my_items",
+          "routes/communities/$communitySlug/my_items/my_items.layout.tsx",
+          [
+            index("routes/communities/$communitySlug/my_items/my_items.tsx"),
             route(
-              ":itemId/edit",
-              "routes/communities/$communitySlug/items/$itemId/edit/edit.tsx",
+              "new",
+              "routes/communities/$communitySlug/my_items/new/new.tsx",
+            ),
+            route(
+              ":itemId",
+              "routes/communities/$communitySlug/my_items/$itemId/$itemId.layout.tsx",
+              [
+                index(
+                  "routes/communities/$communitySlug/my_items/$itemId/$itemId.tsx",
+                ),
+                route(
+                  "edit",
+                  "routes/communities/$communitySlug/my_items/$itemId/edit/edit.tsx",
+                ),
+                route(
+                  "delete",
+                  "routes/communities/$communitySlug/my_items/$itemId/delete/delete.tsx",
+                ),
+              ],
             ),
           ],
         ),

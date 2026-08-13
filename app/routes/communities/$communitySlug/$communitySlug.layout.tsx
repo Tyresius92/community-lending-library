@@ -50,6 +50,11 @@ export default function CommunityLayout({ loaderData }: Route.ComponentProps) {
               <Link to={`/communities/${slug}/items`}>{t("nav.items")}</Link>
             </li>
             <li>
+              <Link to={`/communities/${slug}/my_items`}>
+                {t("nav.myItems")}
+              </Link>
+            </li>
+            <li>
               <Link to={`/communities/${slug}/members`}>
                 {t("nav.members")}
               </Link>

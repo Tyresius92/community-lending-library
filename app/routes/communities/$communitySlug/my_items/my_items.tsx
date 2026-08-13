@@ -4,8 +4,9 @@ import { Link } from "~/components/link/link";
 import { prisma } from "~/db.server";
 import { getInstance, getLocale } from "~/i18n/middleware.server";
 import { getUserId, loginRedirect } from "~/session.server";
+import { getCommunityMembership } from "~/utils/community_role.server";
 
-import type { Route } from "./+types/items";
+import type { Route } from "./+types/my_items";
 
 export const meta: Route.MetaFunction = ({ loaderData }) => [
   { title: loaderData.title },
@@ -22,38 +23,38 @@ export const loader = async ({
     return loginRedirect(url);
   }
 
-  const t = getInstance(context).getFixedT(getLocale(context), "items");
-
-  const community = await prisma.community.findFirst({
-    where: { slug: params.communitySlug, archivedAt: null },
-    select: { id: true },
-  });
-  if (!community) {
+  const found = await getCommunityMembership(userId, params.communitySlug);
+  if (!found) {
     throw new Response("Not Found", { status: 404 });
   }
 
+  const t = getInstance(context).getFixedT(getLocale(context), "items");
+
   const items = await prisma.item.findMany({
-    where: { communityId: community.id },
+    where: { ownerMembershipId: found.membership.id },
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   });
 
-  return { title: t("meta.items"), items };
+  return { title: t("meta.myItems"), items };
 };
 
-export default function Items({ loaderData, params }: Route.ComponentProps) {
+export default function MyItems({ loaderData, params }: Route.ComponentProps) {
   const { t } = useTranslation("items");
   const { items } = loaderData;
   const { communitySlug } = params;
 
   return (
     <div>
-      <h1>{t("headings.items")}</h1>
-      {items.length === 0 ? <p>{t("notices.noItems")}</p> : null}
+      <h1>{t("headings.myItems")}</h1>
+      <Link to={`/communities/${communitySlug}/my_items/new`}>
+        {t("nav.newItem")}
+      </Link>
+      {items.length === 0 ? <p>{t("notices.noItemsOfYours")}</p> : null}
       <ul>
         {items.map((item) => (
           <li key={item.id}>
-            <Link to={`/communities/${communitySlug}/items/${item.id}`}>
+            <Link to={`/communities/${communitySlug}/my_items/${item.id}`}>
               {item.name}
             </Link>
           </li>

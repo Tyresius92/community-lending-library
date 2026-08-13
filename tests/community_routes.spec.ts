@@ -10,18 +10,19 @@ test.describe("community-scoped route scaffolding", () => {
     await expect(page.getByRole("heading", { name: "Items" })).toBeVisible();
   });
 
-  test("items/new route resolves", async ({ page, withCommunityMember }) => {
+  test("my_items/new route resolves", async ({ page, withCommunityMember }) => {
     const { community } = await withCommunityMember();
 
-    await page.goto(`/communities/${community.slug}/items/new`);
+    await page.goto(`/communities/${community.slug}/my_items/new`);
 
-    await expect(page).toHaveURL(`/communities/${community.slug}/items/new`);
-    await expect(
-      page.getByRole("heading", { name: "New item" }),
-    ).toBeVisible();
+    await expect(page).toHaveURL(`/communities/${community.slug}/my_items/new`);
+    await expect(page.getByRole("heading", { name: "New item" })).toBeVisible();
   });
 
-  test("items/:itemId route resolves", async ({ page, withCommunityMember }) => {
+  test("items/:itemId route resolves", async ({
+    page,
+    withCommunityMember,
+  }) => {
     const { community } = await withCommunityMember();
 
     await page.goto(`/communities/${community.slug}/items/some-item-id`);
@@ -30,22 +31,6 @@ test.describe("community-scoped route scaffolding", () => {
       `/communities/${community.slug}/items/some-item-id`,
     );
     await expect(page.getByRole("heading", { name: "Item" })).toBeVisible();
-  });
-
-  test("items/:itemId/edit route resolves", async ({
-    page,
-    withCommunityMember,
-  }) => {
-    const { community } = await withCommunityMember();
-
-    await page.goto(`/communities/${community.slug}/items/some-item-id/edit`);
-
-    await expect(page).toHaveURL(
-      `/communities/${community.slug}/items/some-item-id/edit`,
-    );
-    await expect(
-      page.getByRole("heading", { name: "Edit item" }),
-    ).toBeVisible();
   });
 
   test("members route resolves", async ({ page, withCommunityMember }) => {

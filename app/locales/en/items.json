@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "items": "Items",
+    "newItem": "New item",
+    "editItem": "Edit item",
+    "myItems": "My items"
+  },
+  "headings": {
+    "items": "Items",
+    "newItem": "New item",
+    "editItem": "Edit item",
+    "myItems": "My items"
+  },
+  "nav": {
+    "newItem": "+ New item"
+  },
+  "labels": {
+    "name": "Name",
+    "description": "Description (optional)"
+  },
+  "buttons": {
+    "createItem": "Create item",
+    "saveChanges": "Save changes",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "confirmDelete": "Delete",
+    "close": "Close"
+  },
+  "notices": {
+    "confirmDeleteTitle": "Delete this item?",
+    "confirmDeleteBody": "This can't be undone.",
+    "noItems": "No items yet.",
+    "noItemsOfYours": "You haven't listed any items yet."
+  },
+  "errors": {
+    "nameRequired": "Name is required",
+    "nameTooLong": "Name must be 100 characters or fewer",
+    "descriptionTooLong": "Description must be 1000 characters or fewer"
+  }
+}
