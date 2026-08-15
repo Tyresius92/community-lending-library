@@ -13,7 +13,7 @@ import {
   communityCreateSchema,
   isCommunityErrorCode,
   type CommunityErrorCode,
-} from "~/schemas/community.server";
+} from "~/schemas/community";
 import { getUserId, loginRedirect } from "~/session.server";
 import { SLUG_PATTERN, suggestDisplayNameFromEmail, useUser } from "~/utils";
 

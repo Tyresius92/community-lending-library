@@ -5,13 +5,13 @@ description: Validate route action FormData with Zod. Use when adding or changin
 
 # Zod Validation
 
-Route actions validate `FormData` with [Zod](https://zod.dev) schemas under `app/schemas/<model>.server.ts` — see [CLAUDE.md](../../../CLAUDE.md) for where this fits in the app's architecture.
+Route actions validate `FormData` with [Zod](https://zod.dev) schemas under `app/schemas/<model>.ts` — see [CLAUDE.md](../../../CLAUDE.md) for where this fits in the app's architecture.
 
 ## The core split
 
 **Schemas validate and emit semantic codes. Routes decide what those codes mean on screen.**
 
-A schema file (`app/schemas/item.server.ts`) knows nothing about i18n or display text — its `.min()`/`.max()`/`.regex()`/`.enum()` calls use short semantic CODE strings as their message (`"NAME_REQUIRED"`, never `"errors.nameRequired"` and never English prose). A route action translates those codes into text with its own local `t()` calls. This means:
+A schema file (`app/schemas/item.ts`) knows nothing about i18n or display text — its `.min()`/`.max()`/`.regex()`/`.enum()` calls use short semantic CODE strings as their message (`"NAME_REQUIRED"`, never `"errors.nameRequired"` and never English prose). A route action translates those codes into text with its own local `t()` calls. This means:
 
 - The **validation rule** (what's a valid name, what counts as a taken slug) is written once per model and reused by every route that needs it.
 - The **display text** is a route/UI concern. Two routes validating the same model (e.g. item create vs. edit) are free to show different copy for the same code — coincidentally showing the same English text today isn't duplication worth fighting.
@@ -19,16 +19,14 @@ A schema file (`app/schemas/item.server.ts`) knows nothing about i18n or display
 
 ## Step 1: Define the schema
 
-One file per model: `app/schemas/<model>.server.ts` — kept `.server.ts` on purpose, since it pulls in `zod` and that has no reason to ship to the client for logic that only ever runs inside an action. Full worked example:
+One file per model: `app/schemas/<model>.ts`. Full worked example:
 
 ```ts
-// app/schemas/item.server.ts
+// app/schemas/item.ts
 import { z } from "zod";
 
-import {
-  DESCRIPTION_MAX_LENGTH,
-  NAME_MAX_LENGTH,
-} from "~/schemas/item_constants";
+export const NAME_MAX_LENGTH = 100;
+export const DESCRIPTION_MAX_LENGTH = 1000;
 
 const itemBaseSchema = z.object({
   name: z
@@ -58,19 +56,13 @@ export const isItemErrorCode = (value: string): value is ItemErrorCode =>
   ["NAME_REQUIRED", "NAME_TOO_LONG", "DESCRIPTION_TOO_LONG"].includes(value);
 ```
 
-```ts
-// app/schemas/item_constants.ts — NOT .server.ts, see below
-export const NAME_MAX_LENGTH = 100;
-export const DESCRIPTION_MAX_LENGTH = 1000;
-```
-
 Conventions to follow:
 
-- **A constraint also needed client-side** (e.g. `NAME_MAX_LENGTH`, reused for a `maxLength` JSX attr) does **not** live in the `.server.ts` schema file — put it in a sibling, unsuffixed `<model>_constants.ts`, and have both the schema and the route's component import it from there. If a `.server.ts` file's export is referenced anywhere outside a `loader`/`action`, React Router either hard-errors ("Server-only module referenced by client") or, if you drop the suffix to work around that, ships the whole file — schema, codes, and the `zod` library itself — into the client bundle for every route that imports anything from it, even the parts only used server-side. Most models won't need a constants file at all — item does today, community and login don't (see their schema files).
+- **A constraint also needed client-side** (e.g. `NAME_MAX_LENGTH`, reused for a `maxLength` JSX attr) is exported directly from the schema file, right alongside the Zod schema that uses it — see `NAME_MAX_LENGTH`/`DESCRIPTION_MAX_LENGTH` in `app/schemas/item.ts`. There's no `.server.ts` suffix and no client/server split to route around here: the whole module (schema, codes, type guard, `zod` itself) is fair game to import from a route's component as well as its action. Most models won't need any exported constants at all — item does today, community and login don't (see their schema files).
 - **Variants** are derived from a base `z.object({...})` via `.extend()`/`.omit()`/`.pick()`. Where two routes need an identical shape, just alias the variant name to the same schema object (`export const itemEditSchema = itemBaseSchema`) — don't invent divergence that doesn't exist yet.
 - **Export a flat union of the model's error codes** (`ItemErrorCode`). This is the one piece of compile-time safety in this pattern: a route's `messages: Record<ItemErrorCode, string>` map is checked for exhaustiveness by TypeScript. Add or remove a code in the schema and every route's map either gains a required key or a stale one — both compile errors, not a blank error message discovered in production.
 - **Export a type guard alongside it** (`isItemErrorCode`). Zod's `issue.message` is typed as a plain `string`, so a route needs to narrow it before indexing into a `Record<ItemErrorCode, string>` map. Use a real runtime check (`Array.prototype.includes` against the code list), never `as ItemErrorCode` — this repo doesn't use type assertions to bridge this kind of gap.
-- **A code produced by a route itself** after a DB check (see `SLUG_TAKEN` in `app/schemas/community.server.ts`) still belongs in the model's exported error-code union (and its type guard), with a comment noting it's not produced by Zod. It flows through the same `messages` map as everything else.
+- **A code produced by a route itself** after a DB check (see `SLUG_TAKEN` in `app/schemas/community.ts`) still belongs in the model's exported error-code union (and its type guard), with a comment noting it's not produced by Zod. It flows through the same `messages` map as everything else.
 - **No async `.refine()`, no Prisma access inside a schema.** DB-dependent checks (slug uniqueness) are a separate step in the route, after a successful parse.
 - **Don't invent constraints that don't exist today.** If a field has no length limit in the current app, don't add one just because a sibling field has one — check `prisma/schema.prisma` for a real signal before adding a rule.
 
@@ -85,7 +77,7 @@ import {
   isItemErrorCode,
   itemCreateSchema,
   type ItemErrorCode,
-} from "~/schemas/item.server";
+} from "~/schemas/item";
 
 export async function example(formData: FormData, t: (key: string) => string) {
   const result = itemCreateSchema.safeParse(Object.fromEntries(formData));
@@ -128,11 +120,11 @@ New i18n keys referenced by a `messages` map go under the route's existing names
 
 ## Step 3: Wire errors into components
 
-`TextInput`, `TextArea`, `Select`, and `RadioGroup` all share one contract: `errorMessage?: string`. `actionData?.errors.<field>` plugs straight in — no `?? undefined` needed, since a field with no error is simply `undefined` (not `null` like the old hand-rolled validation used to return). Any constant the component also needs (like `maxLength`) is imported from the unsuffixed constants file, never from the `.server.ts` schema file:
+`TextInput`, `TextArea`, `Select`, and `RadioGroup` all share one contract: `errorMessage?: string`. `actionData?.errors.<field>` plugs straight in — no `?? undefined` needed, since a field with no error is simply `undefined` (not `null` like the old hand-rolled validation used to return). Any constant the component also needs (like `maxLength`) is imported straight from the schema file:
 
 ```tsx
 import { TextInput } from "~/components/text_input/text_input";
-import { NAME_MAX_LENGTH } from "~/schemas/item_constants";
+import { NAME_MAX_LENGTH } from "~/schemas/item";
 
 export function Example({
   actionData,
@@ -156,7 +148,7 @@ export function Example({
 A DB check (e.g. community slug-taken, discovered only after a successful parse) is expressed as the _same_ code, already part of the model's error-code union, and indexed into the _same_ `messages` map already built for the schema errors — one map, one mental model, regardless of whether Zod or Prisma found the problem:
 
 ```ts
-// community.server.ts already includes "SLUG_TAKEN" in CommunityErrorCode,
+// community.ts already includes "SLUG_TAKEN" in CommunityErrorCode,
 // covered by the messages map built for the schema-failure branch above.
 export function example(
   slugIsTaken: boolean,
@@ -185,7 +177,7 @@ Test the schema directly — there's no parse helper to test. Use this repo's `i
 ```ts
 import { describe, expect, it } from "vitest";
 
-import { itemCreateSchema } from "./item.server";
+import { itemCreateSchema } from "./item";
 
 function buildFormData(entries: Record<string, string>): FormData {
   const formData = new FormData();
@@ -220,16 +212,16 @@ describe("itemCreateSchema", () => {
 });
 ```
 
-See `app/schemas/item.server.test.ts` and `app/schemas/community.server.test.ts` for full reference files.
+See `app/schemas/item.test.ts` and `app/schemas/community.test.ts` for full reference files.
 
 ## Checklist for a new route's validation
 
 1. Does a schema for this model already exist under `app/schemas/`? If yes, reuse or derive a variant with `.extend()`/`.omit()`/`.pick()` — don't write a new schema from scratch.
-2. If not, create `app/schemas/<model>.server.ts`: base object, exported constants (or import them from a new sibling `<model>_constants.ts` if the component needs them too), exported `<Model>ErrorCode` union, exported `is<Model>ErrorCode` type guard.
+2. If not, create `app/schemas/<model>.ts`: base object, exported constants if the component needs them too, exported `<Model>ErrorCode` union, exported `is<Model>ErrorCode` type guard.
 3. In the action: `schema.safeParse(Object.fromEntries(formData))`.
 4. On failure: look up each field's first issue in `result.error.issues`, narrow it with the type guard, build (or inline) this route's code→text map, return a consistently-shaped `errors` object.
 5. On success: use `result.data` directly.
-6. Wire `errorMessage={actionData?.errors.<field>}` into the relevant components, importing any shared constant from `<model>_constants.ts` if one exists.
+6. Wire `errorMessage={actionData?.errors.<field>}` into the relevant components, importing any shared constant straight from `<model>.ts` if one exists.
 7. Add any new i18n keys under the namespace file's existing `errors` group.
-8. Add/extend `<model>.server.test.ts` with edge cases (empty, over-limit, invalid enum value, valid).
+8. Add/extend `<model>.test.ts` with edge cases (empty, over-limit, invalid enum value, valid).
 9. `npm run validate`.

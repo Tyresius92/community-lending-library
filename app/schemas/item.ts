@@ -1,9 +1,7 @@
 import { z } from "zod";
 
-import {
-  DESCRIPTION_MAX_LENGTH,
-  NAME_MAX_LENGTH,
-} from "~/schemas/item_constants";
+export const NAME_MAX_LENGTH = 100;
+export const DESCRIPTION_MAX_LENGTH = 1000;
 
 const itemBaseSchema = z.object({
   name: z

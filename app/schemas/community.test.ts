@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { communityCreateSchema, communityJoinSchema } from "./community.server";
+import { communityCreateSchema, communityJoinSchema } from "./community";
 
 function buildFormData(entries: Record<string, string>): FormData {
   const formData = new FormData();

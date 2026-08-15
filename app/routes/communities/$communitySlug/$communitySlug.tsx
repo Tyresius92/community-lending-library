@@ -6,7 +6,7 @@ import { TextInput } from "~/components/text_input/text_input";
 import { prisma } from "~/db.server";
 import { Prisma } from "~/generated/prisma/client";
 import { getInstance, getLocale } from "~/i18n/middleware.server";
-import { communityJoinSchema } from "~/schemas/community.server";
+import { communityJoinSchema } from "~/schemas/community";
 import { getUserId, loginRedirect } from "~/session.server";
 import { suggestDisplayNameFromEmail, useUser } from "~/utils";
 

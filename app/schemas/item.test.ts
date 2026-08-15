@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { itemCreateSchema, itemEditSchema } from "./item.server";
+import { itemCreateSchema, itemEditSchema } from "./item";
 
 function buildFormData(entries: Record<string, string>): FormData {
   const formData = new FormData();

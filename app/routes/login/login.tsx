@@ -9,7 +9,7 @@ import { getInstance, getLocale } from "~/i18n/middleware.server";
 import { sendEmail } from "~/mailer.server";
 import { createMagicLinkToken } from "~/models/magic_link.server";
 import { findOrCreateUserByEmail } from "~/models/user.server";
-import { loginSchema } from "~/schemas/login.server";
+import { loginSchema } from "~/schemas/login";
 import { getUserId } from "~/session.server";
 import { safeRedirect } from "~/utils";
 import { getClientIp, isRateLimited } from "~/utils/rate_limit.server";

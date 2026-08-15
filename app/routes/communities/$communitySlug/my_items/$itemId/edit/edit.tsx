@@ -11,11 +11,9 @@ import {
   isItemErrorCode,
   itemEditSchema,
   type ItemErrorCode,
-} from "~/schemas/item.server";
-import {
   DESCRIPTION_MAX_LENGTH,
   NAME_MAX_LENGTH,
-} from "~/schemas/item_constants";
+} from "~/schemas/item";
 import { getUserId, loginRedirect } from "~/session.server";
 import { getCommunityMembership } from "~/utils/community_role.server";
 
