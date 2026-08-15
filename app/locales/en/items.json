@@ -16,7 +16,11 @@
   },
   "labels": {
     "name": "Name",
-    "description": "Description (optional)"
+    "description": "Description (optional)",
+    "item": "Item",
+    "owner": "Owner",
+    "ownerPlaceholder": "A neighbor",
+    "you": "You"
   },
   "buttons": {
     "createItem": "Create item",
