@@ -6,6 +6,7 @@ import { TextInput } from "~/components/text_input/text_input";
 import { prisma } from "~/db.server";
 import { Prisma } from "~/generated/prisma/client";
 import { getInstance, getLocale } from "~/i18n/middleware.server";
+import { communityJoinSchema } from "~/schemas/community.server";
 import { getUserId, loginRedirect } from "~/session.server";
 import { suggestDisplayNameFromEmail, useUser } from "~/utils";
 
@@ -85,14 +86,16 @@ export const action = async ({
   const t = getInstance(context).getFixedT(getLocale(context), "communities");
 
   const formData = await request.formData();
-  const displayName = formData.get("displayName");
 
-  if (typeof displayName !== "string" || displayName.trim().length === 0) {
+  const result = communityJoinSchema.safeParse(Object.fromEntries(formData));
+  if (!result.success) {
     return data(
       { errors: { displayName: t("errors.displayNameRequired") } },
       { status: 400 },
     );
   }
+
+  const { displayName } = result.data;
 
   const community = await prisma.community.findFirst({
     where: { slug: params.communitySlug, archivedAt: null },
@@ -114,7 +117,7 @@ export const action = async ({
         userId,
         communityId: community.id,
         role: "member",
-        displayName: displayName.trim(),
+        displayName,
       },
     });
   } catch (error) {
@@ -165,7 +168,7 @@ export default function CommunityOverview({
             name="displayName"
             type="text"
             defaultValue={suggestDisplayNameFromEmail(user.email)}
-            errorMessage={actionData?.errors.displayName ?? undefined}
+            errorMessage={actionData?.errors.displayName}
           />
           <Button type="submit">{t("buttons.joinCommunity")}</Button>
         </Form>

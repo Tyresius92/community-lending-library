@@ -74,20 +74,7 @@ export function useUser(): User {
   return maybeUser;
 }
 
-export function validateEmail(email: unknown): email is string {
-  return typeof email === "string" && email.length > 3 && email.includes("@");
-}
-
 export const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-
-export function validateSlug(slug: unknown): slug is string {
-  return (
-    typeof slug === "string" &&
-    slug.length >= 3 &&
-    slug.length <= 50 &&
-    SLUG_PATTERN.test(slug)
-  );
-}
 
 export function suggestDisplayNameFromEmail(email: string): string {
   return email.split("@")[0] ?? "";

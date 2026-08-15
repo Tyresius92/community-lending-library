@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { data, redirect, Form } from "react-router";
-import invariant from "tiny-invariant";
 
 import { Button } from "~/components/button/button";
 import { RadioGroup } from "~/components/radio_group/radio_group";
@@ -10,13 +9,13 @@ import { TextInput } from "~/components/text_input/text_input";
 import { prisma } from "~/db.server";
 import { Prisma } from "~/generated/prisma/client";
 import { getInstance, getLocale } from "~/i18n/middleware.server";
-import { getUserId, loginRedirect } from "~/session.server";
 import {
-  SLUG_PATTERN,
-  suggestDisplayNameFromEmail,
-  useUser,
-  validateSlug,
-} from "~/utils";
+  communityCreateSchema,
+  isCommunityErrorCode,
+  type CommunityErrorCode,
+} from "~/schemas/community.server";
+import { getUserId, loginRedirect } from "~/session.server";
+import { SLUG_PATTERN, suggestDisplayNameFromEmail, useUser } from "~/utils";
 
 import type { Route } from "./+types/new";
 
@@ -43,67 +42,69 @@ export const action = async ({ request, context, url }: Route.ActionArgs) => {
   const t = getInstance(context).getFixedT(getLocale(context), "communities");
   const formData = await request.formData();
 
-  const name = formData.get("name");
-  const slug = formData.get("slug");
-  const description = formData.get("description");
-  const visibility =
-    formData.get("visibility") === "private" ? "private" : "public";
-  const joinPolicy =
-    formData.get("joinPolicy") === "invite_only" ? "invite_only" : "open";
-  const displayName = formData.get("displayName");
+  const result = communityCreateSchema.safeParse(Object.fromEntries(formData));
 
-  const errors = {
-    name:
-      typeof name !== "string" || name.trim().length === 0
-        ? t("errors.nameRequired")
-        : null,
-    slug: validateSlug(slug) ? null : t("errors.slugPattern"),
-    displayName:
-      typeof displayName !== "string" || displayName.trim().length === 0
-        ? t("errors.displayNameRequired")
-        : null,
+  const messages: Record<CommunityErrorCode, string> = {
+    NAME_REQUIRED: t("errors.nameRequired"),
+    SLUG_PATTERN: t("errors.slugPattern"),
+    VISIBILITY_INVALID: t("errors.visibilityInvalid"),
+    JOIN_POLICY_INVALID: t("errors.joinPolicyInvalid"),
+    DISPLAY_NAME_REQUIRED: t("errors.displayNameRequired"),
+    SLUG_TAKEN: t("errors.slugTaken"),
   };
 
-  if (errors.name || errors.slug || errors.displayName) {
-    return data({ errors }, { status: 400 });
+  if (!result.success) {
+    const fieldMessage = (field: string): string | undefined => {
+      const issue = result.error.issues.find(
+        (issue) => issue.path[0] === field,
+      );
+      return issue && isCommunityErrorCode(issue.message)
+        ? messages[issue.message]
+        : undefined;
+    };
+
+    return data(
+      {
+        errors: {
+          name: fieldMessage("name"),
+          slug: fieldMessage("slug"),
+          visibility: fieldMessage("visibility"),
+          joinPolicy: fieldMessage("joinPolicy"),
+          displayName: fieldMessage("displayName"),
+        },
+      },
+      { status: 400 },
+    );
   }
 
-  invariant(typeof name === "string", "name should have passed validation");
-  invariant(validateSlug(slug), "slug should have passed validation");
-  invariant(
-    typeof displayName === "string",
-    "displayName should have passed validation",
-  );
+  const { name, slug, description, visibility, joinPolicy, displayName } =
+    result.data;
 
-  const trimmedName = name.trim();
-  const trimmedSlug = slug;
-  const trimmedDescription =
-    typeof description === "string" && description.trim().length > 0
-      ? description.trim()
-      : null;
-  const trimmedDisplayName = displayName.trim();
-
-  const slugTakenError = {
-    errors: { name: null, slug: t("errors.slugTaken"), displayName: null },
+  const slugTakenErrors = {
+    errors: {
+      name: undefined,
+      slug: messages.SLUG_TAKEN,
+      visibility: undefined,
+      joinPolicy: undefined,
+      displayName: undefined,
+    },
   };
 
-  if (trimmedSlug === "new") {
-    return data(slugTakenError, { status: 400 });
+  if (slug === "new") {
+    return data(slugTakenErrors, { status: 400 });
   }
 
-  const existing = await prisma.community.findUnique({
-    where: { slug: trimmedSlug },
-  });
+  const existing = await prisma.community.findUnique({ where: { slug } });
   if (existing) {
-    return data(slugTakenError, { status: 400 });
+    return data(slugTakenErrors, { status: 400 });
   }
 
   try {
     const community = await prisma.community.create({
       data: {
-        name: trimmedName,
-        slug: trimmedSlug,
-        description: trimmedDescription,
+        name,
+        slug,
+        description: description.length > 0 ? description : null,
         visibility,
         joinPolicy,
         owner: { connect: { id: userId } },
@@ -112,7 +113,7 @@ export const action = async ({ request, context, url }: Route.ActionArgs) => {
             {
               user: { connect: { id: userId } },
               role: "owner",
-              displayName: trimmedDisplayName,
+              displayName,
             },
           ],
         },
@@ -125,7 +126,7 @@ export const action = async ({ request, context, url }: Route.ActionArgs) => {
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"
     ) {
-      return data(slugTakenError, { status: 400 });
+      return data(slugTakenErrors, { status: 400 });
     }
     throw error;
   }
@@ -158,7 +159,7 @@ export default function NewCommunityPage({ actionData }: Route.ComponentProps) {
           label={t("labels.name")}
           name="name"
           type="text"
-          errorMessage={actionData?.errors.name ?? undefined}
+          errorMessage={actionData?.errors.name}
         />
         <TextInput
           ref={slugRef}
@@ -167,7 +168,7 @@ export default function NewCommunityPage({ actionData }: Route.ComponentProps) {
           type="text"
           pattern={SLUG_PATTERN.source}
           hintText={t("hints.url")}
-          errorMessage={actionData?.errors.slug ?? undefined}
+          errorMessage={actionData?.errors.slug}
         />
         <TextArea label={t("labels.description")} name="description" rows={4} />
         <RadioGroup
@@ -178,6 +179,7 @@ export default function NewCommunityPage({ actionData }: Route.ComponentProps) {
             { value: "private", label: t("options.visibilityPrivate") },
           ]}
           defaultValue="public"
+          errorMessage={actionData?.errors.visibility}
         />
         <RadioGroup
           label={t("labels.joinPolicy")}
@@ -187,6 +189,7 @@ export default function NewCommunityPage({ actionData }: Route.ComponentProps) {
             { value: "invite_only", label: t("options.joinPolicyInviteOnly") },
           ]}
           defaultValue="open"
+          errorMessage={actionData?.errors.joinPolicy}
         />
         <TextInput
           ref={displayNameRef}
@@ -194,7 +197,7 @@ export default function NewCommunityPage({ actionData }: Route.ComponentProps) {
           name="displayName"
           type="text"
           defaultValue={suggestDisplayNameFromEmail(user.email)}
-          errorMessage={actionData?.errors.displayName ?? undefined}
+          errorMessage={actionData?.errors.displayName}
         />
         <Button type="submit">{t("buttons.createCommunity")}</Button>
       </Form>

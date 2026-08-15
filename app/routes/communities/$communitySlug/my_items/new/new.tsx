@@ -7,13 +7,19 @@ import { TextArea } from "~/components/text_area/text_area";
 import { TextInput } from "~/components/text_input/text_input";
 import { prisma } from "~/db.server";
 import { getInstance, getLocale } from "~/i18n/middleware.server";
+import {
+  isItemErrorCode,
+  itemCreateSchema,
+  type ItemErrorCode,
+} from "~/schemas/item.server";
+import {
+  DESCRIPTION_MAX_LENGTH,
+  NAME_MAX_LENGTH,
+} from "~/schemas/item_constants";
 import { getUserId, loginRedirect } from "~/session.server";
 import { getCommunityMembership } from "~/utils/community_role.server";
 
 import type { Route } from "./+types/new";
-
-const NAME_MAX_LENGTH = 100;
-const DESCRIPTION_MAX_LENGTH = 1000;
 
 export const meta: Route.MetaFunction = ({ loaderData }) => [
   { title: loaderData.title },
@@ -58,37 +64,40 @@ export const action = async ({
   const t = getInstance(context).getFixedT(getLocale(context), "items");
   const formData = await request.formData();
 
-  const name = formData.get("name");
-  const description = formData.get("description");
+  const result = itemCreateSchema.safeParse(Object.fromEntries(formData));
+  if (!result.success) {
+    const messages: Record<ItemErrorCode, string> = {
+      NAME_REQUIRED: t("errors.nameRequired"),
+      NAME_TOO_LONG: t("errors.nameTooLong"),
+      DESCRIPTION_TOO_LONG: t("errors.descriptionTooLong"),
+    };
 
-  const trimmedName = typeof name === "string" ? name.trim() : "";
-  const trimmedDescriptionValue =
-    typeof description === "string" ? description.trim() : "";
+    const fieldMessage = (field: string): string | undefined => {
+      const issue = result.error.issues.find(
+        (issue) => issue.path[0] === field,
+      );
+      return issue && isItemErrorCode(issue.message)
+        ? messages[issue.message]
+        : undefined;
+    };
 
-  let nameError: string | null = null;
-  if (trimmedName.length === 0) {
-    nameError = t("errors.nameRequired");
-  } else if (trimmedName.length > NAME_MAX_LENGTH) {
-    nameError = t("errors.nameTooLong");
+    return data(
+      {
+        errors: {
+          name: fieldMessage("name"),
+          description: fieldMessage("description"),
+        },
+      },
+      { status: 400 },
+    );
   }
 
-  const errors = {
-    name: nameError,
-    description:
-      trimmedDescriptionValue.length > DESCRIPTION_MAX_LENGTH
-        ? t("errors.descriptionTooLong")
-        : null,
-  };
-
-  if (errors.name || errors.description) {
-    return data({ errors }, { status: 400 });
-  }
+  const { name, description } = result.data;
 
   const item = await prisma.item.create({
     data: {
-      name: trimmedName,
-      description:
-        trimmedDescriptionValue.length > 0 ? trimmedDescriptionValue : null,
+      name,
+      description: description.length > 0 ? description : null,
       community: { connect: { id: found.community.id } },
       ownerMembership: { connect: { id: found.membership.id } },
     },
@@ -121,7 +130,7 @@ export default function NewItem({ actionData }: Route.ComponentProps) {
           name="name"
           type="text"
           maxLength={NAME_MAX_LENGTH}
-          errorMessage={actionData?.errors.name ?? undefined}
+          errorMessage={actionData?.errors.name}
         />
         <TextArea
           ref={descriptionRef}
@@ -129,7 +138,7 @@ export default function NewItem({ actionData }: Route.ComponentProps) {
           name="description"
           rows={4}
           maxLength={DESCRIPTION_MAX_LENGTH}
-          errorMessage={actionData?.errors.description ?? undefined}
+          errorMessage={actionData?.errors.description}
         />
         <Button type="submit">{t("buttons.createItem")}</Button>
       </Form>

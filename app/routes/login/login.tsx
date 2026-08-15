@@ -1,30 +1,26 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import type {
-  ActionFunctionArgs,
-  LoaderFunctionArgs,
-  MetaFunction,
-} from "react-router";
-import {
-  data,
-  redirect,
-  Form,
-  useActionData,
-  useLoaderData,
-  useSearchParams,
-} from "react-router";
+import { data, redirect, Form, useSearchParams } from "react-router";
 
+import { TextInput } from "~/components/text_input/text_input";
 import { emailT } from "~/emails/locale.server";
 import { MagicLinkEmail } from "~/emails/magic_link_email";
 import { getInstance, getLocale } from "~/i18n/middleware.server";
 import { sendEmail } from "~/mailer.server";
 import { createMagicLinkToken } from "~/models/magic_link.server";
 import { findOrCreateUserByEmail } from "~/models/user.server";
+import { loginSchema } from "~/schemas/login.server";
 import { getUserId } from "~/session.server";
-import { safeRedirect, validateEmail } from "~/utils";
+import { safeRedirect } from "~/utils";
 import { getClientIp, isRateLimited } from "~/utils/rate_limit.server";
 
-export const loader = async ({ request, context }: LoaderFunctionArgs) => {
+import type { Route } from "./+types/login";
+
+export const meta: Route.MetaFunction = ({ loaderData }) => [
+  { title: loaderData.title },
+];
+
+export const loader = async ({ request, context }: Route.LoaderArgs) => {
   const userId = await getUserId(request);
   if (userId) {
     return redirect("/");
@@ -48,16 +44,16 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   });
 };
 
-export const action = async ({ request, context }: ActionFunctionArgs) => {
+export const action = async ({ request, context }: Route.ActionArgs) => {
   const t = getInstance(context).getFixedT(getLocale(context), "login");
   const formData = await request.formData();
-  const email = formData.get("email");
   const redirectTo = safeRedirect(formData.get("redirectTo"), "/communities");
 
-  if (!validateEmail(email)) {
+  const result = loginSchema.safeParse(Object.fromEntries(formData));
+  if (!result.success) {
     return data(
       {
-        ok: false,
+        ok: false as const,
         email: null,
         errors: { email: t("errors.emailInvalid") },
       },
@@ -65,8 +61,10 @@ export const action = async ({ request, context }: ActionFunctionArgs) => {
     );
   }
 
+  const { email } = result.data;
+
   if (isRateLimited(`login:${getClientIp(request)}`)) {
-    return data({ ok: true, email, errors: { email: null } });
+    return data({ ok: true as const, email, errors: { email: null } });
   }
 
   const user = await findOrCreateUserByEmail(email);
@@ -87,19 +85,17 @@ export const action = async ({ request, context }: ActionFunctionArgs) => {
     react: <MagicLinkEmail magicLinkUrl={magicLinkUrl.toString()} />,
   });
 
-  return data({ ok: true, email, errors: { email: null } });
+  return data({ ok: true as const, email, errors: { email: null } });
 };
 
-export const meta: MetaFunction<typeof loader> = ({ loaderData }) => [
-  { title: loaderData?.title },
-];
-
-export default function LoginPage() {
+export default function LoginPage({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
   const { t } = useTranslation("login");
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") ?? "/communities";
-  const { magicLinkErrorMessage } = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
+  const { magicLinkErrorMessage } = loaderData;
   const emailRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -121,25 +117,16 @@ export default function LoginPage() {
       <div>
         {magicLinkErrorMessage ? <div>{magicLinkErrorMessage}</div> : null}
         <Form method="post">
-          <div>
-            <label htmlFor="email">{t("labels.email")}</label>
-            <div>
-              <input
-                ref={emailRef}
-                id="email"
-                required
-                autoFocus={true}
-                name="email"
-                type="email"
-                autoComplete="email"
-                aria-invalid={actionData?.errors.email ? true : undefined}
-                aria-describedby="email-error"
-              />
-              {actionData?.errors.email ? (
-                <div id="email-error">{actionData.errors.email}</div>
-              ) : null}
-            </div>
-          </div>
+          <TextInput
+            ref={emailRef}
+            label={t("labels.email")}
+            name="email"
+            type="email"
+            required
+            autoFocus
+            autoComplete="email"
+            errorMessage={actionData?.errors.email ?? undefined}
+          />
 
           <input type="hidden" name="redirectTo" value={redirectTo} />
           <button type="submit">{t("buttons.submit")}</button>

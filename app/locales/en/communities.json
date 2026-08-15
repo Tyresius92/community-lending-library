@@ -52,6 +52,8 @@
     "slugPattern": "Slug must be lowercase letters, numbers, and hyphens (3–50 characters)",
     "displayNameRequired": "Display name is required",
     "slugTaken": "That URL is already taken. Try another.",
+    "visibilityInvalid": "Choose a visibility option",
+    "joinPolicyInvalid": "Choose who can join",
     "unexpectedWithMessage": "An unexpected error occurred: {{message}}",
     "unknown": "Unknown Error",
     "notFound": "Community not found"
