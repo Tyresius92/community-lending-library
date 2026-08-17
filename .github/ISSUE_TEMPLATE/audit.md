@@ -9,10 +9,6 @@ labels: ""
 
 <!-- What is being audited, and across which screens/routes/issues? -->
 
-## Blocked by
-
-<!-- List every issue whose output this audit depends on, e.g. "Blocked by #8, #9, #10". -->
-
 ## Pass criteria
 
 <!-- What does "no findings" or "clean" look like for this specific audit? Be concrete — e.g. "playwright-axe reports zero violations across Browse, Item Detail, My Loans" or "no screen shows owner identity before a loan request is accepted." -->

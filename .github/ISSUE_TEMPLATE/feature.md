@@ -9,10 +9,6 @@ labels: ""
 
 <!-- What is this issue about? What should exist once it's done that doesn't exist now? -->
 
-## Blocked by
-
-<!-- List any issues that must land first, e.g. "Blocked by #12". Delete this section if nothing blocks this issue. -->
-
 ## Definition of Done
 
 - [ ] **Unit tests** — any data-transformation logic pulled out of the loader/action into a helper function has vitest coverage (pure input → output). Loaders/actions themselves are not unit tested directly — their auth, DB fetch, and return-data steps are covered by E2E tests instead.
