@@ -126,6 +126,8 @@ if (!meetsMinRole(found.membership.role, "admin")) {
 }
 ```
 
+`CommunityMembership.removedAt`/`removedById` mark a member as removed (banned) without deleting the row — see [ADR-006](docs/adr/ADR-006-member-removal-is-a-soft-ban.md). `getCommunityMembership` treats a removed membership as if it doesn't exist (returns `null`), so the check above already locks a removed member out everywhere it's used. Routes that query `CommunityMembership` directly instead of going through this helper (e.g. the community overview page) must filter `removedAt: null` themselves.
+
 **Logging & error tracking**: use `app/logger.ts`'s `logger` (`error`/`warn`/`info`/`setUser`) instead of `console.*` in server-side app code — it reports to Sentry. Sentry is not initialized in local development or tests. CLI scripts and dev-only output that must never reach Sentry (e.g. anything containing a live token) stay on raw `console.*`.
 
 **Component library** (`app/components/`): `Button`, `Link`, `TextInput`, `TextArea`, `Select`, `RadioGroup`, `Checkbox`, `Modal`, `Box`, `Table`. Build new forms/nav/UI from these rather than raw HTML elements. Currently unstyled — components exist for semantic/accessible structure and will be styled later without call sites needing to change.

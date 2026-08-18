@@ -21,13 +21,14 @@ model User {
 
   magicLinks MagicLink[]
 
-  memberships         CommunityMembership[]
-  ownedCommunities    Community[]           @relation("CommunityOwner")
-  loansAsBorrower     Loan[]                @relation("LoanBorrower")
-  loansAsOwner        Loan[]                @relation("LoanOwner")
-  messagesSent        Message[]
-  inviteTokensSent    InviteToken[]         @relation("InviteTokenCreatedBy")
-  inviteTokensRevoked InviteToken[]         @relation("InviteTokenRevokedBy")
+  memberships          CommunityMembership[]
+  ownedCommunities     Community[]           @relation("CommunityOwner")
+  loansAsBorrower      Loan[]                @relation("LoanBorrower")
+  loansAsOwner         Loan[]                @relation("LoanOwner")
+  messagesSent         Message[]
+  inviteTokensSent     InviteToken[]         @relation("InviteTokenCreatedBy")
+  inviteTokensRevoked  InviteToken[]         @relation("InviteTokenRevokedBy")
+  membershipsRemoved   CommunityMembership[] @relation("CommunityMembershipRemovedBy")
 }
 
 model MagicLink {
@@ -122,6 +123,11 @@ model CommunityMembership {
   shareRealNameOverride Boolean @default(false)
 
   joinedAt DateTime @default(now())
+
+  removedAt DateTime?
+
+  removedBy   User?   @relation("CommunityMembershipRemovedBy", fields: [removedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  removedById String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
