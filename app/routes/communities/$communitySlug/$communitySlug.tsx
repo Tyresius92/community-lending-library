@@ -22,27 +22,36 @@ export const loader = async ({ params, request, url }: Route.LoaderArgs) => {
     return loginRedirect(url);
   }
 
+  // Deliberately not using getCommunityMembership here: it collapses
+  // "community doesn't exist," "never joined," and "banned" into a single
+  // null, but this route needs to tell them apart — non-membership branches
+  // three ways depending on visibility/joinPolicy below, and a ban must 404
+  // unconditionally rather than falling into the "come join us" paths.
   const community = await prisma.community.findFirst({
     where: { slug: params.communitySlug, archivedAt: null },
-    include: {
-      memberships: {
-        select: {
-          id: true,
-          userId: true,
-          displayName: true,
-          role: true,
-          joinedAt: true,
-        },
-        orderBy: { joinedAt: "asc" },
-      },
-    },
   });
   if (!community) {
     throw new Response("Not Found", { status: 404 });
   }
 
-  const viewerMembership =
-    community.memberships.find((m) => m.userId === userId) ?? null;
+  const viewerMembership = await prisma.communityMembership.findUnique({
+    where: { userId_communityId: { userId, communityId: community.id } },
+    select: {
+      id: true,
+      userId: true,
+      displayName: true,
+      role: true,
+      joinedAt: true,
+      removedAt: true,
+    },
+  });
+
+  // A removed member is banned, not just no-longer-a-member: treat the
+  // community as inaccessible regardless of visibility, and never let this
+  // fall through to the "browse as a non-member" paths below.
+  if (viewerMembership?.removedAt) {
+    throw new Response("Not Found", { status: 404 });
+  }
 
   if (community.visibility === "private" && !viewerMembership) {
     throw new Response("Not Found", { status: 404 });
@@ -59,6 +68,18 @@ export const loader = async ({ params, request, url }: Route.LoaderArgs) => {
     };
   }
 
+  const memberships = await prisma.communityMembership.findMany({
+    where: { communityId: community.id, removedAt: null },
+    select: {
+      id: true,
+      userId: true,
+      displayName: true,
+      role: true,
+      joinedAt: true,
+    },
+    orderBy: { displayName: "asc" },
+  });
+
   const canJoin =
     !viewerMembership &&
     community.visibility === "public" &&
@@ -66,7 +87,7 @@ export const loader = async ({ params, request, url }: Route.LoaderArgs) => {
 
   return {
     accessLevel: "full" as const,
-    community,
+    community: { ...community, memberships },
     viewerMembership,
     canJoin,
   };
@@ -108,6 +129,11 @@ export const action = async ({
     where: { userId_communityId: { userId, communityId: community.id } },
   });
   if (existingMembership) {
+    // A removed membership means this user was banned, not just previously
+    // left — rejoining is not allowed.
+    if (existingMembership.removedAt) {
+      throw new Response("Not Found", { status: 404 });
+    }
     return redirect(`/communities/${community.slug}`);
   }
 

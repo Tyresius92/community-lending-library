@@ -41,7 +41,7 @@ export const loader = async ({
   }
 
   const rawItems = await prisma.item.findMany({
-    where: { communityId: community.id },
+    where: { communityId: community.id, ownerMembership: { removedAt: null } },
     select: { id: true, name: true, ownerMembershipId: true },
     orderBy: { name: "asc" },
   });

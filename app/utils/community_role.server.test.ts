@@ -64,4 +64,16 @@ describe("getCommunityMembership", () => {
     expect(result?.membership.id).toBe(membership.id);
     expect(result?.membership.role).toBe("admin");
   });
+
+  it("returns null when the membership has been removed", async () => {
+    const community = await CommunityFactory.create();
+    const membership = await CommunityMembershipFactory.create({
+      community: { connect: { id: community.id } },
+      removedAt: new Date(),
+    });
+
+    expect(
+      await getCommunityMembership(membership.userId, community.slug),
+    ).toBeNull();
+  });
 });

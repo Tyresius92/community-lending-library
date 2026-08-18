@@ -10,7 +10,14 @@ The Prisma schema (`prisma/schema.prisma`) already models the full domain — `C
 
 ## How we work
 
-**Ask before assuming.** When there's ambiguity about what's wanted — in scope, design, behavior, or implementation — ask rather than guess. A wrong implementation that has to be undone costs more than the time spent clarifying.
+**Ask before assuming — no exceptions for "small" decisions.** This is the single most important rule in this file. If there is any ambiguity at all — in scope, design, behavior, implementation, wording, or whether a decision made elsewhere should also apply here — stop and ask, rather than resolving it yourself. In particular, none of the following are valid reasons to skip asking:
+
+- The answer feels obvious to you. ("Obviously right" is not the same as "confirmed right," and this exact thought has preceded real mistakes in this project.)
+- The decision feels small, cosmetic, or "just an implementation detail" — a sort order, a default value, a naming choice, an error message's wording, whether to touch a file adjacent to the one you're supposed to be changing.
+- You're mid-task and asking would break momentum or slow down a checkpoint you're trying to finish.
+- Deciding it yourself would keep the diff smaller, or get you to "done" sooner.
+
+The default action on any unstated judgment call is to stop and ask — proceeding on your own judgment is the exception, reserved for cases where the user has already explicitly specified the answer or there is truly no second reasonable interpretation. The cost of asking is a short pause. The cost of guessing wrong is rework, an explanation, and re-teaching the same lesson. When those two costs are ever in tension, asking wins, every time.
 
 **One logical unit at a time.** Break work into discrete steps. Complete one, report what was done, and wait for approval before starting the next.
 

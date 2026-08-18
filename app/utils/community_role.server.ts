@@ -29,7 +29,7 @@ export async function getCommunityMembership(
   const membership = await prisma.communityMembership.findUnique({
     where: { userId_communityId: { userId, communityId: community.id } },
   });
-  if (!membership) {
+  if (!membership || membership.removedAt) {
     return null;
   }
 
