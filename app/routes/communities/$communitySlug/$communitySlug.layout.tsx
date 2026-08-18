@@ -21,13 +21,21 @@ export const loader = async ({ params, request, url }: Route.LoaderArgs) => {
     throw new Response("Not Found", { status: 404 });
   }
 
-  if (community.visibility === "private") {
-    const membership = await prisma.communityMembership.findUnique({
-      where: { userId_communityId: { userId, communityId: community.id } },
-    });
-    if (!membership) {
-      throw new Response("Not Found", { status: 404 });
-    }
+  const membership = await prisma.communityMembership.findUnique({
+    where: { userId_communityId: { userId, communityId: community.id } },
+    select: { removedAt: true },
+  });
+
+  // A banned member is locked out of every community-scoped route
+  // regardless of visibility — child routes that don't do their own
+  // membership check (e.g. a stub with no loader yet) would otherwise fall
+  // through to this layout's gate with no ban check at all.
+  if (membership?.removedAt) {
+    throw new Response("Not Found", { status: 404 });
+  }
+
+  if (community.visibility === "private" && !membership) {
+    throw new Response("Not Found", { status: 404 });
   }
 
   return { community };

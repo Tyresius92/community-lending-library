@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "members": "Members"
+  },
+  "headings": {
+    "members": "Members"
+  },
+  "roles": {
+    "member": "Member",
+    "admin": "Admin",
+    "owner": "Owner"
+  },
+  "labels": {
+    "memberSince": "Member since {{date}}",
+    "lendCount_one": "{{count}} completed loan",
+    "lendCount_other": "{{count}} completed loans"
+  },
+  "notices": {
+    "noMembers": "No members yet."
+  }
+}

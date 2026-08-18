@@ -5,8 +5,9 @@ import communities from "~/locales/en/communities.json";
 import home from "~/locales/en/home.json";
 import items from "~/locales/en/items.json";
 import login from "~/locales/en/login.json";
+import members from "~/locales/en/members.json";
 
-const en = { common, home, login, communities, items };
+const en = { common, home, login, communities, items, members };
 
 const resources = { en } satisfies Resource;
 
