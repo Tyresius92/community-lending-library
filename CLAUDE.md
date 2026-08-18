@@ -57,6 +57,8 @@ npm run build-storybook   # build static Storybook
 
 **Routing**: routes are declared explicitly in [app/routes.ts](app/routes.ts) (Framework Mode, not filesystem routing) — adding a route means adding both the file(s) under `app/routes/` and the corresponding entry in `routes.ts`. A route segment `foo` gets its own folder `foo/foo.tsx`. Add `foo.layout.tsx` alongside it only when the segment has children that share layout UI. When a shared layout contributes no URL segment of its own, prefix the folder with `_` (e.g. `_auth/`). The root `/` route is the one exception, staying flat as `app/routes/_index.tsx`.
 
+The only non-route files that belong under `app/routes/` are components used exclusively by that one route (e.g. a route-local `member_card.tsx`, not reusable enough to belong in `app/components/`). Server-side helpers, data-transformation functions, and anything else that isn't a route module or a route-exclusive component go in `app/utils/` (or another appropriately-named top-level `app/` directory), even if only one route currently calls them.
+
 Example:
 
 ```ascii
