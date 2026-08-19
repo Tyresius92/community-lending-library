@@ -3,7 +3,10 @@ import { useTranslation } from "react-i18next";
 import { prisma } from "~/db.server";
 import { getInstance, getLocale } from "~/i18n/middleware.server";
 import { getUserId, loginRedirect } from "~/session.server";
-import { getCommunityMembership } from "~/utils/community_role.server";
+import {
+  getCommunityMembership,
+  meetsMinRole,
+} from "~/utils/community_role.server";
 import { getCompletedLendCounts } from "~/utils/lend_count.server";
 
 import type { Route } from "./+types/members";
@@ -57,14 +60,20 @@ export const loader = async ({
     role: membership.role,
     memberSince: dateFormatter.format(membership.joinedAt),
     lendCount: lendCounts.get(membership.userId) ?? 0,
+    isSelf: membership.userId === userId,
   }));
 
-  return { title: t("meta.members"), members };
+  return {
+    title: t("meta.members"),
+    members,
+    communitySlug: params.communitySlug,
+    canManage: meetsMinRole(found.membership.role, "admin"),
+  };
 };
 
 export default function Members({ loaderData }: Route.ComponentProps) {
   const { t } = useTranslation("members");
-  const { members } = loaderData;
+  const { members, communitySlug, canManage } = loaderData;
 
   return (
     <div>
@@ -75,7 +84,11 @@ export default function Members({ loaderData }: Route.ComponentProps) {
         <ul>
           {members.map((member) => (
             <li key={member.id}>
-              <MemberCard member={member} />
+              <MemberCard
+                member={member}
+                communitySlug={communitySlug}
+                canManage={canManage}
+              />
             </li>
           ))}
         </ul>

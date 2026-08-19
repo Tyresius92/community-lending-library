@@ -56,7 +56,20 @@ export default [
         ),
         route(
           "members",
-          "routes/communities/$communitySlug/members/members.tsx",
+          "routes/communities/$communitySlug/members/members.layout.tsx",
+          [
+            index("routes/communities/$communitySlug/members/members.tsx"),
+            route(
+              ":membershipId",
+              "routes/communities/$communitySlug/members/$membershipId/$membershipId.layout.tsx",
+              [
+                route(
+                  "role",
+                  "routes/communities/$communitySlug/members/$membershipId/role/role.tsx",
+                ),
+              ],
+            ),
+          ],
         ),
         route("loans", "routes/communities/$communitySlug/loans/loans.tsx"),
       ],

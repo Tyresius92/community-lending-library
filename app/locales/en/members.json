@@ -15,7 +15,14 @@
     "lendCount_one": "{{count}} completed loan",
     "lendCount_other": "{{count}} completed loans"
   },
+  "buttons": {
+    "promoteToAdmin": "Promote to admin",
+    "demoteToMember": "Demote to member"
+  },
   "notices": {
     "noMembers": "No members yet."
+  },
+  "errors": {
+    "roleInvalid": "Choose a valid role"
   }
 }
