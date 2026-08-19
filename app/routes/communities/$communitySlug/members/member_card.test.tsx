@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import i18next from "i18next";
 import { I18nextProvider, initReactI18next } from "react-i18next";
 import { createMemoryRouter, RouterProvider } from "react-router";
@@ -100,42 +100,93 @@ describe("MemberCard", () => {
     expect(screen.getByText("0 completed loans")).toBeInTheDocument();
   });
 
-  describe("role-change button", () => {
-    it("shows 'Promote to admin' for a manageable member row", () => {
-      renderMemberCard({ ...baseMember, role: "member" });
+  describe("management actions", () => {
+    describe("role-change button", () => {
+      it("shows 'Promote to admin' for a manageable member row", () => {
+        renderMemberCard({ ...baseMember, role: "member" });
 
-      expect(
-        screen.getByRole("button", { name: "Promote to admin" }),
-      ).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: "Promote to admin" }),
+        ).toBeInTheDocument();
+      });
+
+      it("shows 'Demote to member' for a manageable admin row", () => {
+        renderMemberCard({ ...baseMember, role: "admin" });
+
+        expect(
+          screen.getByRole("button", { name: "Demote to member" }),
+        ).toBeInTheDocument();
+      });
+
+      it("submits the target role as a hidden field", () => {
+        renderMemberCard({ ...baseMember, role: "member" });
+
+        expect(screen.getByDisplayValue("admin")).toBeInTheDocument();
+      });
     });
 
-    it("shows 'Demote to member' for a manageable admin row", () => {
-      renderMemberCard({ ...baseMember, role: "admin" });
+    describe("kick button and confirmation modal", () => {
+      it("shows a 'Remove from community' button for a manageable row", () => {
+        renderMemberCard(baseMember);
 
-      expect(
-        screen.getByRole("button", { name: "Demote to member" }),
-      ).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: "Remove from community" }),
+        ).toBeInTheDocument();
+      });
+
+      it("opens a confirmation modal naming the member when clicked", () => {
+        renderMemberCard(baseMember);
+
+        fireEvent.click(
+          screen.getByRole("button", { name: "Remove from community" }),
+        );
+
+        expect(
+          screen.getByRole("dialog", {
+            name: "Remove Jordan from the community?",
+          }),
+        ).toBeVisible();
+      });
+
+      it("shows a confirm button inside the open modal", () => {
+        renderMemberCard(baseMember);
+
+        fireEvent.click(
+          screen.getByRole("button", { name: "Remove from community" }),
+        );
+
+        expect(
+          within(screen.getByRole("dialog")).getByRole("button", {
+            name: "Remove",
+          }),
+        ).toBeInTheDocument();
+      });
+
+      it("closes without submitting when cancelled", () => {
+        renderMemberCard(baseMember);
+
+        fireEvent.click(
+          screen.getByRole("button", { name: "Remove from community" }),
+        );
+        fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      });
     });
 
-    it("submits the target role as a hidden field", () => {
-      renderMemberCard({ ...baseMember, role: "member" });
-
-      expect(screen.getByDisplayValue("admin")).toBeInTheDocument();
-    });
-
-    it("never renders for the owner's row, even when canManage is true", () => {
+    it("never renders management buttons for the owner's row, even when canManage is true", () => {
       renderMemberCard({ ...baseMember, role: "owner" });
 
       expect(screen.queryByRole("button")).not.toBeInTheDocument();
     });
 
-    it("never renders for the viewer's own row, even when canManage is true", () => {
+    it("never renders management buttons for the viewer's own row, even when canManage is true", () => {
       renderMemberCard({ ...baseMember, isSelf: true });
 
       expect(screen.queryByRole("button")).not.toBeInTheDocument();
     });
 
-    it("never renders when the viewer cannot manage members", () => {
+    it("never renders management buttons when the viewer cannot manage members", () => {
       renderMemberCard(baseMember, { canManage: false });
 
       expect(screen.queryByRole("button")).not.toBeInTheDocument();

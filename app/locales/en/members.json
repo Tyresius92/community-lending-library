@@ -17,10 +17,16 @@
   },
   "buttons": {
     "promoteToAdmin": "Promote to admin",
-    "demoteToMember": "Demote to member"
+    "demoteToMember": "Demote to member",
+    "removeFromCommunity": "Remove from community",
+    "confirmRemove": "Remove",
+    "cancel": "Cancel",
+    "close": "Close"
   },
   "notices": {
-    "noMembers": "No members yet."
+    "noMembers": "No members yet.",
+    "confirmRemoveTitle": "Remove {{name}} from the community?",
+    "confirmRemoveBody": "They'll lose access right away and won't be able to rejoin."
   },
   "errors": {
     "roleInvalid": "Choose a valid role"

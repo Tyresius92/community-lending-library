@@ -67,6 +67,10 @@ export default [
                   "role",
                   "routes/communities/$communitySlug/members/$membershipId/role/role.tsx",
                 ),
+                route(
+                  "kick",
+                  "routes/communities/$communitySlug/members/$membershipId/kick/kick.tsx",
+                ),
               ],
             ),
           ],
