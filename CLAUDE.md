@@ -21,6 +21,8 @@ The default action on any unstated judgment call is to stop and ask — proceedi
 
 **One logical unit at a time.** Break work into discrete steps. Complete one, report what was done, and wait for approval before starting the next.
 
+**No code comments without permission.** Do not add code comments unless the user explicitly instructed one, or you asked and the user approved it first. This overrides the general "add a comment when the WHY is non-obvious" allowance — in this repo, that judgment call belongs to the user, not to Claude.
+
 **Verify before declaring done.** Run the `ship-check` skill before reporting any coding task complete — it runs typecheck, unit tests, build, e2e, lint, and format in order, fixing failures and restarting until everything's green.
 
 **Tests are part of the task, not a follow-up.** Every change to production code includes tests in the same unit of work. Use Vitest for utility functions, server-side logic, data transformations, and components that don't need a full server. Use Playwright for page flows, form submissions, and auth/UI behavior a user would actually perform. Don't import a route's `action`/`loader` directly into a Vitest test — Playwright exercises the full request cycle and is the right tool for that; ask before making an exception.

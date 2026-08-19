@@ -17,10 +17,9 @@ test.describe("browse items", () => {
   }) => {
     const { community, user: viewer } = await withCommunityMember();
 
-    const viewerMembership =
-      await prisma.communityMembership.findFirstOrThrow({
-        where: { userId: viewer.id, communityId: community.id },
-      });
+    const viewerMembership = await prisma.communityMembership.findFirstOrThrow({
+      where: { userId: viewer.id, communityId: community.id },
+    });
     await ItemFactory.create({
       name: "Camping Tent",
       community: { connect: { id: community.id } },

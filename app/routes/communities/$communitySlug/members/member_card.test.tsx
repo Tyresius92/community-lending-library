@@ -20,10 +20,6 @@ beforeAll(async () => {
   });
 });
 
-// MemberCard renders a react-router <Form>, which needs a data-router
-// context to work at all (not just a declarative <MemoryRouter>) — wrapping
-// with RouterProvider/createMemoryRouter around a single route is the
-// minimal setup that satisfies it.
 function renderMemberCard(
   member: Member,
   overrides: Partial<Omit<MemberCardProps, "member">> = {},

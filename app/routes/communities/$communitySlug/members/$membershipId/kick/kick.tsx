@@ -35,9 +35,6 @@ export const action = async ({ params, request, url }: Route.ActionArgs) => {
     throw new Response("Not Found", { status: 404 });
   }
 
-  // The owner can't be removed here (ownership transfer is a separate,
-  // not-yet-built flow), and a viewer can never remove themselves — both
-  // enforced here, not just hidden client-side.
   if (target.role === "owner" || target.userId === userId) {
     return new Response(null, { status: 403 });
   }

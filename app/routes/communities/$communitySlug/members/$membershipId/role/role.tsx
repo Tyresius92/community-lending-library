@@ -42,9 +42,6 @@ export const action = async ({
     throw new Response("Not Found", { status: 404 });
   }
 
-  // The owner's role is only changeable via a (not-yet-built) ownership
-  // transfer flow, and a viewer can never change their own role — both
-  // guardrails are enforced here, not just hidden client-side.
   if (target.role === "owner" || target.userId === userId) {
     return new Response(null, { status: 403 });
   }

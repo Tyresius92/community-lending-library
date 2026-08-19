@@ -22,11 +22,6 @@ export const loader = async ({ params, request, url }: Route.LoaderArgs) => {
     return loginRedirect(url);
   }
 
-  // Deliberately not using getCommunityMembership here: it collapses
-  // "community doesn't exist," "never joined," and "banned" into a single
-  // null, but this route needs to tell them apart — non-membership branches
-  // three ways depending on visibility/joinPolicy below, and a ban must 404
-  // unconditionally rather than falling into the "come join us" paths.
   const community = await prisma.community.findFirst({
     where: { slug: params.communitySlug, archivedAt: null },
   });
@@ -46,9 +41,6 @@ export const loader = async ({ params, request, url }: Route.LoaderArgs) => {
     },
   });
 
-  // A removed member is banned, not just no-longer-a-member: treat the
-  // community as inaccessible regardless of visibility, and never let this
-  // fall through to the "browse as a non-member" paths below.
   if (viewerMembership?.removedAt) {
     throw new Response("Not Found", { status: 404 });
   }
@@ -129,8 +121,6 @@ export const action = async ({
     where: { userId_communityId: { userId, communityId: community.id } },
   });
   if (existingMembership) {
-    // A removed membership means this user was banned, not just previously
-    // left — rejoining is not allowed.
     if (existingMembership.removedAt) {
       throw new Response("Not Found", { status: 404 });
     }

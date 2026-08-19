@@ -49,6 +49,9 @@ export const test = base.extend<Fixtures>({
       return { user, community };
     });
 
+    await prisma.loan.deleteMany({
+      where: { communityId: { in: communityIds } },
+    });
     await prisma.communityMembership.deleteMany({
       where: { communityId: { in: communityIds } },
     });

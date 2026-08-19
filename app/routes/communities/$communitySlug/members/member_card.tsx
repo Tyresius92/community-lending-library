@@ -31,10 +31,6 @@ export const MemberCard = ({
   const nameId = useId();
   const [isKickModalOpen, setIsKickModalOpen] = useState(false);
 
-  // The owner's role/membership only changes via a (not-yet-built) ownership
-  // transfer flow, and a viewer can never act on their own row — mirrored
-  // server-side in role.tsx/kick.tsx, this is just where the buttons
-  // disappear from.
   const canManageMember =
     canManage && !member.isSelf && member.role !== "owner";
 
