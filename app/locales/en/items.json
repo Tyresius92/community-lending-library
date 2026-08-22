@@ -29,13 +29,17 @@
     "delete": "Delete",
     "cancel": "Cancel",
     "confirmDelete": "Delete",
-    "close": "Close"
+    "close": "Close",
+    "askToBorrow": "Ask to borrow"
   },
   "notices": {
     "confirmDeleteTitle": "Delete this item?",
     "confirmDeleteBody": "This can't be undone.",
     "noItems": "No items yet.",
-    "noItemsOfYours": "You haven't listed any items yet."
+    "noItemsOfYours": "You haven't listed any items yet.",
+    "requestPending": "Request pending",
+    "requestAccepted": "Request accepted",
+    "currentlyBorrowing": "Currently borrowing"
   },
   "errors": {
     "nameRequired": "Name is required",
