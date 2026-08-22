@@ -175,8 +175,6 @@ model Loan {
 
   status LoanStatus @default(pending)
 
-  requestedDurationDays Int?
-
   expiresAt DateTime
 
   acceptedAt      DateTime?
