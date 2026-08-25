@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "borrowing": "Borrowing",
+    "lending": "Lending"
+  },
+  "headings": {
+    "borrowing": "Borrowing",
+    "lending": "Lending"
+  },
+  "labels": {
+    "item": "Item",
+    "owner": "Owner",
+    "ownerPlaceholder": "A neighbor",
+    "borrower": "Borrower",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "status": {
+    "pending": "Pending",
+    "accepted": "Accepted",
+    "declined": "Declined",
+    "cancelled": "Cancelled",
+    "expired": "Expired"
+  },
+  "buttons": {
+    "accept": "Accept",
+    "decline": "Decline",
+    "cancel": "Cancel",
+    "confirmCancel": "Cancel request",
+    "close": "Close"
+  },
+  "notices": {
+    "confirmCancelTitle": "Cancel this loan?",
+    "confirmCancelBody": "This can't be undone.",
+    "noBorrowing": "You don't have any loans yet.",
+    "noLending": "No one has requested to borrow from you yet."
+  }
+}

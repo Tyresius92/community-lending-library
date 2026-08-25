@@ -49,9 +49,27 @@ other member; a specific loan does.
   ownership id itself is never sent to the client for another member's item,
   so the guarantee isn't just CSS-hidden and doesn't depend on trusting the
   client not to look.
-- **My Loans** is the one place a real name appears, because the viewer is
-  already a party to that specific loan (as the accepted borrower or the
-  owner) — nothing new is disclosed by naming them there.
+- **My Loans** is the one place a real name can appear, since the viewer is
+  already a party to that specific loan — but only while the loan is in a
+  status where that specific relationship is actually live. The two
+  directions are **not** symmetric:
+
+  - **Borrowing (viewer is the borrower):** the owner's real name shows only
+    while the loan is `accepted` or `active` — never while `pending` (the
+    request hasn't been accepted yet, so the ordinary hidden-until-accepted
+    rule still applies), and never again once the loan is `completed`,
+    `declined`, `cancelled`, or `expired`. A neutral placeholder renders
+    otherwise, exactly as it would on Browse/Item Detail.
+  - **Lending (viewer is the owner):** the borrower's real name shows while
+    the loan is `pending`, `accepted`, or `active` — `pending` is included
+    here, unlike the borrower's side, because the owner has to know who is
+    asking in order to decide whether to accept. It does not show once the
+    loan is `completed`, `declined`, `cancelled`, or `expired`.
+
+  Both directions are computed **server-side**, same as Item Detail — the raw
+  name must never be present in the loader's response when hidden, not
+  merely hidden by the component.
+
 - **`my_items`** is exempt entirely, since it only ever shows the viewer's
   own items.
 - **Members list:** item ownership must never be shown or inferable at all —
@@ -81,7 +99,10 @@ other member; a specific loan does.
 - Every loader/action touching items or members has to actively implement
   this exclusion rather than getting it for free from a naive query — a
   missed case is a real privacy leak, not a cosmetic bug, so it needs its
-  own dedicated e2e audit coverage distinct from ordinary feature tests.
+  own dedicated e2e audit coverage distinct from ordinary feature tests. My
+  Loans is the easiest place to get this wrong: "the viewer is a party to
+  this loan" is not by itself sufficient justification to show a name — the
+  loan's current status has to be checked too, per-direction, every time.
 - Queries are a bit more involved than a plain join: each row needs "is this
   my item" / "do I have an accepted request on this item" computed
   per-viewer.
