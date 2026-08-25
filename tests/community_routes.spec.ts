@@ -28,12 +28,19 @@ test.describe("community-scoped route scaffolding", () => {
     await expect(page.getByRole("heading", { name: "Members" })).toBeVisible();
   });
 
-  test("loans route resolves", async ({ page, withCommunityMember }) => {
+  test("loans route redirects to borrowing", async ({
+    page,
+    withCommunityMember,
+  }) => {
     const { community } = await withCommunityMember();
 
     await page.goto(`/communities/${community.slug}/loans`);
 
-    await expect(page).toHaveURL(`/communities/${community.slug}/loans`);
-    await expect(page.getByRole("heading", { name: "Loans" })).toBeVisible();
+    await expect(page).toHaveURL(
+      `/communities/${community.slug}/loans/borrowing`,
+    );
+    await expect(
+      page.getByRole("heading", { name: "Borrowing" }),
+    ).toBeVisible();
   });
 });

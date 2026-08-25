@@ -1,4 +1,9 @@
-import { index, route, type RouteConfig } from "@react-router/dev/routes";
+import {
+  index,
+  prefix,
+  route,
+  type RouteConfig,
+} from "@react-router/dev/routes";
 
 export default [
   index("routes/_index.tsx"),
@@ -15,67 +20,56 @@ export default [
       "routes/communities/$communitySlug/$communitySlug.layout.tsx",
       [
         index("routes/communities/$communitySlug/$communitySlug.tsx"),
-        route(
-          "items",
-          "routes/communities/$communitySlug/items/items.layout.tsx",
-          [
-            index("routes/communities/$communitySlug/items/items.tsx"),
-            route(
-              ":itemId",
-              "routes/communities/$communitySlug/items/$itemId/$itemId.tsx",
+        ...prefix("items", [
+          index("routes/communities/$communitySlug/items/items.tsx"),
+          route(
+            ":itemId",
+            "routes/communities/$communitySlug/items/$itemId/$itemId.tsx",
+          ),
+        ]),
+        ...prefix("my_items", [
+          index("routes/communities/$communitySlug/my_items/my_items.tsx"),
+          route(
+            "new",
+            "routes/communities/$communitySlug/my_items/new/new.tsx",
+          ),
+          route(
+            ":itemId",
+            "routes/communities/$communitySlug/my_items/$itemId/$itemId.tsx",
+          ),
+          route(
+            ":itemId/edit",
+            "routes/communities/$communitySlug/my_items/$itemId/edit/edit.tsx",
+          ),
+          route(
+            ":itemId/delete",
+            "routes/communities/$communitySlug/my_items/$itemId/delete/delete.tsx",
+          ),
+        ]),
+        ...prefix("members", [
+          index("routes/communities/$communitySlug/members/members.tsx"),
+          route(
+            ":membershipId/role",
+            "routes/communities/$communitySlug/members/$membershipId/role/role.tsx",
+          ),
+          route(
+            ":membershipId/kick",
+            "routes/communities/$communitySlug/members/$membershipId/kick/kick.tsx",
+          ),
+        ]),
+        ...prefix("loans", [
+          index("routes/communities/$communitySlug/loans/loans.tsx"),
+          ...prefix("borrowing", [
+            index(
+              "routes/communities/$communitySlug/loans/borrowing/borrowing.tsx",
             ),
-          ],
-        ),
-        route(
-          "my_items",
-          "routes/communities/$communitySlug/my_items/my_items.layout.tsx",
-          [
-            index("routes/communities/$communitySlug/my_items/my_items.tsx"),
-            route(
-              "new",
-              "routes/communities/$communitySlug/my_items/new/new.tsx",
+          ]),
+          ...prefix("lending", [
+            index(
+              "routes/communities/$communitySlug/loans/lending/lending.tsx",
             ),
-            route(
-              ":itemId",
-              "routes/communities/$communitySlug/my_items/$itemId/$itemId.layout.tsx",
-              [
-                index(
-                  "routes/communities/$communitySlug/my_items/$itemId/$itemId.tsx",
-                ),
-                route(
-                  "edit",
-                  "routes/communities/$communitySlug/my_items/$itemId/edit/edit.tsx",
-                ),
-                route(
-                  "delete",
-                  "routes/communities/$communitySlug/my_items/$itemId/delete/delete.tsx",
-                ),
-              ],
-            ),
-          ],
-        ),
-        route(
-          "members",
-          "routes/communities/$communitySlug/members/members.layout.tsx",
-          [
-            index("routes/communities/$communitySlug/members/members.tsx"),
-            route(
-              ":membershipId",
-              "routes/communities/$communitySlug/members/$membershipId/$membershipId.layout.tsx",
-              [
-                route(
-                  "role",
-                  "routes/communities/$communitySlug/members/$membershipId/role/role.tsx",
-                ),
-                route(
-                  "kick",
-                  "routes/communities/$communitySlug/members/$membershipId/kick/kick.tsx",
-                ),
-              ],
-            ),
-          ],
-        ),
-        route("loans", "routes/communities/$communitySlug/loans/loans.tsx"),
+          ]),
+        ]),
       ],
     ),
   ]),

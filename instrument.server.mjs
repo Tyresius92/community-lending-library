@@ -31,7 +31,13 @@ if (flyAppName) {
       // consumption. Skip creating a transaction for it entirely rather
       // than sampling it down, since it carries no diagnostic value.
       Sentry.httpIntegration({
-        ignoreIncomingRequests: (url) => url.startsWith("/healthcheck"),
+        ignoreIncomingRequests: (urlPath, request) => {
+          if (urlPath === "/healthcheck") return true;
+          if (request.method === "HEAD" && urlPath === "/") return true;
+          if (urlPath.startsWith("/wp-admin") || urlPath.startsWith("/wp-login"))
+            return true;
+          return false;
+        },
       }),
     ],
     tracesSampleRate: 0.1,

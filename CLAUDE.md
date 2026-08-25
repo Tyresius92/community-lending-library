@@ -57,7 +57,7 @@ npm run build-storybook   # build static Storybook
 
 ## Architecture
 
-**Routing**: routes are declared explicitly in [app/routes.ts](app/routes.ts) (Framework Mode, not filesystem routing) — adding a route means adding both the file(s) under `app/routes/` and the corresponding entry in `routes.ts`. A route segment `foo` gets its own folder `foo/foo.tsx`. Add `foo.layout.tsx` alongside it only when the segment has children that share layout UI. When a shared layout contributes no URL segment of its own, prefix the folder with `_` (e.g. `_auth/`). The root `/` route is the one exception, staying flat as `app/routes/_index.tsx`.
+**Routing**: routes are declared explicitly in [app/routes.ts](app/routes.ts) (Framework Mode, not filesystem routing) — adding a route means adding both the file(s) under `app/routes/` and the corresponding entry in `routes.ts`. A route segment `foo` gets its own folder `foo/foo.tsx`. Add `foo.layout.tsx` alongside it, registered via `route()`/`layout()`, only when the segment's children genuinely share layout UI (wrapping markup, a loader, an `ErrorBoundary`) — not merely to give a set of children a common URL prefix. When a segment's children need no shared UI at all, register it with `prefix(path, children)` instead: it adds the URL prefix without introducing a parent route or file, so no `.layout.tsx` gets written just to return `<Outlet />`. When a shared layout contributes no URL segment of its own, prefix the folder with `_` (e.g. `_auth/`). The root `/` route is the one exception, staying flat as `app/routes/_index.tsx`.
 
 The only non-route files that belong under `app/routes/` are components used exclusively by that one route (e.g. a route-local `member_card.tsx`, not reusable enough to belong in `app/components/`). Server-side helpers, data-transformation functions, and anything else that isn't a route module or a route-exclusive component go in `app/utils/` (or another appropriately-named top-level `app/` directory), even if only one route currently calls them.
 
@@ -96,6 +96,20 @@ export default [
       ":communitySlug",
       "routes/communities/$communitySlug/$communitySlug.layout.tsx",
       [index("routes/communities/$communitySlug/$communitySlug.tsx")],
+    ),
+  ]),
+] satisfies RouteConfig;
+```
+
+A segment like `items` has children (`index`, `:itemId`) but no shared UI of its own, so it uses `prefix()` rather than a `.layout.tsx`:
+
+```ts
+export default [
+  ...prefix("items", [
+    index("routes/communities/$communitySlug/items/items.tsx"),
+    route(
+      ":itemId",
+      "routes/communities/$communitySlug/items/$itemId/$itemId.tsx",
     ),
   ]),
 ] satisfies RouteConfig;
