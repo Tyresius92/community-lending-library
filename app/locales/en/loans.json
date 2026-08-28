@@ -12,12 +12,15 @@
     "owner": "Owner",
     "ownerPlaceholder": "A neighbor",
     "borrower": "Borrower",
+    "borrowerPlaceholder": "A neighbor",
     "status": "Status",
     "actions": "Actions"
   },
   "status": {
     "pending": "Pending",
     "accepted": "Accepted",
+    "active": "Active",
+    "completed": "Completed",
     "declined": "Declined",
     "cancelled": "Cancelled",
     "expired": "Expired"

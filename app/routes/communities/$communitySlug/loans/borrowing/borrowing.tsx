@@ -15,14 +15,7 @@ import { expireIfNeeded } from "~/utils/loan_expiry.server";
 
 import type { Route } from "./+types/borrowing";
 
-const VISIBLE_STATUSES: LoanStatus[] = [
-  "pending",
-  "accepted",
-  "declined",
-  "cancelled",
-  "expired",
-];
-
+const REVEALED_STATUSES: LoanStatus[] = ["accepted", "active"];
 const CANCELLABLE_STATUSES: LoanStatus[] = ["pending", "accepted"];
 
 export const meta: Route.MetaFunction = ({ loaderData }) => [
@@ -51,7 +44,6 @@ export const loader = async ({
     where: {
       communityId: found.community.id,
       borrowerId: userId,
-      status: { in: VISIBLE_STATUSES },
     },
     select: {
       id: true,
@@ -73,7 +65,7 @@ export const loader = async ({
   const loans = await Promise.all(
     rawLoans.map(async (loan) => {
       const { status } = await expireIfNeeded(loan);
-      const isRevealed = status === "accepted";
+      const isRevealed = REVEALED_STATUSES.includes(status);
       return {
         id: loan.id,
         status,
