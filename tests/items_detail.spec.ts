@@ -310,6 +310,53 @@ test.describe("item detail", () => {
     await borrowerContext.close();
   });
 
+  test("an expired pending request no longer blocks asking again, and is persisted as expired", async ({
+    browser,
+    withCommunityMember,
+  }) => {
+    const { community, user: owner } = await withCommunityMember();
+    const ownerMembership = await prisma.communityMembership.findFirstOrThrow({
+      where: { userId: owner.id, communityId: community.id },
+    });
+    const item = await ItemFactory.create({
+      name: "Tent",
+      community: { connect: { id: community.id } },
+      ownerMembership: { connect: { id: ownerMembership.id } },
+    });
+
+    const borrowerContext = await browser.newContext();
+    const borrowerPage = await borrowerContext.newPage();
+    const borrower = await loginAsNewUser(
+      borrowerContext,
+      `borrower-${faker.string.uuid()}@example.com`,
+    );
+    await CommunityMembershipFactory.create({
+      user: { connect: { id: borrower.id } },
+      community: { connect: { id: community.id } },
+    });
+    const loan = await LoanFactory.create({
+      item: { connect: { id: item.id } },
+      community: { connect: { id: community.id } },
+      borrower: { connect: { id: borrower.id } },
+      owner: { connect: { id: owner.id } },
+      status: "pending",
+      expiresAt: new Date(Date.now() - 60 * 60 * 1000),
+    });
+
+    await borrowerPage.goto(`/communities/${community.slug}/items/${item.id}`);
+    await expect(
+      borrowerPage.getByRole("button", { name: "Ask to borrow" }),
+    ).toBeVisible();
+    await expect(borrowerPage.getByText("Request pending")).toBeHidden();
+
+    const persisted = await prisma.loan.findUniqueOrThrow({
+      where: { id: loan.id },
+    });
+    expect(persisted.status).toBe("expired");
+
+    await borrowerContext.close();
+  });
+
   test("a nonexistent item id in a real community returns 404", async ({
     page,
     withCommunityMember,

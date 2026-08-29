@@ -34,7 +34,10 @@ if (flyAppName) {
         ignoreIncomingRequests: (urlPath, request) => {
           if (urlPath === "/healthcheck") return true;
           if (request.method === "HEAD" && urlPath === "/") return true;
-          if (urlPath.startsWith("/wp-admin") || urlPath.startsWith("/wp-login"))
+          if (
+            urlPath.startsWith("/wp-admin") ||
+            urlPath.startsWith("/wp-login")
+          )
             return true;
           return false;
         },

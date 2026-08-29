@@ -63,10 +63,26 @@ export default [
             index(
               "routes/communities/$communitySlug/loans/borrowing/borrowing.tsx",
             ),
+            route(
+              ":loanId/cancel",
+              "routes/communities/$communitySlug/loans/borrowing/$loanId/cancel/cancel.tsx",
+            ),
           ]),
           ...prefix("lending", [
             index(
               "routes/communities/$communitySlug/loans/lending/lending.tsx",
+            ),
+            route(
+              ":loanId/accept",
+              "routes/communities/$communitySlug/loans/lending/$loanId/accept/accept.tsx",
+            ),
+            route(
+              ":loanId/decline",
+              "routes/communities/$communitySlug/loans/lending/$loanId/decline/decline.tsx",
+            ),
+            route(
+              ":loanId/cancel",
+              "routes/communities/$communitySlug/loans/lending/$loanId/cancel/cancel.tsx",
             ),
           ]),
         ]),

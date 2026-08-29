@@ -6,6 +6,7 @@ import { prisma } from "~/db.server";
 import type { LoanStatus } from "~/generated/prisma/client";
 import { getUserId, loginRedirect } from "~/session.server";
 import { getCommunityMembership } from "~/utils/community_role.server";
+import { expireIfNeeded } from "~/utils/loan_expiry.server";
 
 import type { Route } from "./+types/$itemId";
 
@@ -18,17 +19,19 @@ async function getViewerLoanStatus(
 ): Promise<LiveLoanStatus | null> {
   const loan = await prisma.loan.findFirst({
     where: { itemId, borrowerId, status: { in: LIVE_LOAN_STATUSES } },
-    select: { status: true },
+    select: { id: true, status: true, expiresAt: true },
   });
   if (!loan) {
     return null;
   }
 
-  switch (loan.status) {
+  const { status } = await expireIfNeeded(loan);
+
+  switch (status) {
     case "pending":
     case "accepted":
     case "active":
-      return loan.status;
+      return status;
     default:
       return null;
   }
