@@ -215,8 +215,8 @@ model Message {
 }
 
 model InviteToken {
-  id        String @id @default(cuid())
-  tokenHash String @unique
+  id    String @id @default(cuid())
+  token String @unique
 
   community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   communityId String
