@@ -1,31 +1,18 @@
 ---
 name: ship-check
-description: Run the full pre-completion verification suite (typecheck, unit tests, build, e2e, lint, format) in strict order, fixing failures and restarting from the top until everything passes. Use before declaring any coding task done.
+description: Run the full pre-completion verification gate (npm run ship-check) before declaring any coding task — typically a GitHub issue — complete. Fixes failures and reruns from scratch until everything's green.
 ---
 
 # Ship Check
 
-`npm run validate` runs these same checks but in parallel and all-or-nothing —
-fine for CI, unhelpful when you're mid-task and need to know exactly which
-check broke and why. Run them one at a time instead, in this order:
+Run `npm run ship-check`. It chains, in order: start Docker → typecheck →
+full test suite (both Vitest projects) → build → Playwright e2e → lint →
+format.
 
-1. `npm run typecheck`
-2. `npm run test -- --run` (both Vitest projects — the app suite and the
-   Storybook/`@storybook/addon-a11y` project)
-3. `npm run build`
-4. `npm run test:e2e:run` (needs the Docker Postgres container up —
-   `npm run docker` first if `postgres_test` isn't reachable)
-5. `npm run lint`
-6. `npm run format:check`
+On any failure: fix the root cause, then **rerun `npm run ship-check` from
+scratch** — don't resume from where it failed. A fix for one check can
+break an earlier one (a lint autofix that breaks typecheck, a type fix
+that breaks a test), so a partial rerun can't be trusted.
 
-On any failure in steps 1–5: fix the root cause, then **restart from Step 1**.
-A fix for one check can break an earlier one (a lint autofix that breaks
-typecheck, a type fix that breaks a test) — don't resume from where you left
-off.
-
-On a Step 6 failure: run `npm run format` (auto-fixes in place) and re-run
-Step 6 to confirm. No need to restart from Step 1 — formatting doesn't touch
-logic.
-
-Only report the task as done once all six steps pass in one uninterrupted
-run.
+Only report the task as done once `npm run ship-check` passes clean in one
+uninterrupted run.

@@ -21,7 +21,8 @@
     "test:e2e:run": "npx playwright test",
     "test:db:reset": "node --env-file=.env.test ./node_modules/.bin/prisma migrate reset --force",
     "typecheck": "react-router typegen && tsc",
-    "validate": "npm-run-all --parallel \"test -- --run\" lint typecheck && npm run test:e2e:run",
+    "step-check": "npm run typecheck && npm run lint && npm run format",
+    "ship-check": "npm run docker && npm run typecheck && npm run test -- --run && npm run build && npm run test:e2e:run && npm run lint && npm run format",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -88,7 +89,6 @@
     "globals": "17.7.0",
     "happy-dom": "20.11.1",
     "msw": "2.15.0",
-    "npm-run-all2": "6.2.6",
     "playwright": "1.62.0",
     "prettier": "3.3.3",
     "storybook": "10.5.7",

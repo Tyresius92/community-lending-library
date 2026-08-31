@@ -17,4 +17,4 @@ labels: ""
 
 - [ ] Audit run and findings (if any) documented below, or confirmed clean.
 - [ ] Any findings filed as follow-up issues or fixed directly in this issue.
-- [ ] `npm run validate` passes (lint, typecheck, vitest, e2e).
+- [ ] `npm run ship-check` passes.

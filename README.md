@@ -51,7 +51,7 @@ Sign-in is by magic link — there's no password. In development, the login link
 ## Testing
 
 ```sh
-npm run validate   # lint, typecheck, unit tests, then e2e
+npm run ship-check   # typecheck, unit tests, build, e2e, lint, format
 ```
 
 Vitest covers unit-level and component-level tests; Playwright covers end-to-end flows through the UI. See [CLAUDE.md](CLAUDE.md) for the full breakdown of what goes where.

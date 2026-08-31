@@ -19,13 +19,13 @@ The Prisma schema (`prisma/schema.prisma`) already models the full domain — `C
 
 The default action on any unstated judgment call is to stop and ask — proceeding on your own judgment is the exception, reserved for cases where the user has already explicitly specified the answer or there is truly no second reasonable interpretation. The cost of asking is a short pause. The cost of guessing wrong is rework, an explanation, and re-teaching the same lesson. When those two costs are ever in tension, asking wins, every time.
 
-**One logical unit at a time.** Break work into discrete steps. Complete one, report what was done, and wait for approval before starting the next.
+**One logical unit at a time.** Break work into discrete steps. For a step that changes code, run `npm run step-check` before checking in; on any failure, fix the root cause and rerun it from scratch (not just the failing part) until it passes clean. A step that's pure research, planning, or reading has nothing for `step-check` to check, so skip it. Complete one step, report what was done, and wait for approval before starting the next.
 
 **No code comments without permission.** Do not add code comments unless the user explicitly instructed one, or you asked and the user approved it first. This overrides the general "add a comment when the WHY is non-obvious" allowance — in this repo, that judgment call belongs to the user, not to Claude.
 
-**Verify before declaring done.** Run the `ship-check` skill before reporting any coding task complete — it runs typecheck, unit tests, build, e2e, lint, and format in order, fixing failures and restarting until everything's green.
+**Verify before declaring done.** Run the `ship-check` skill before reporting any coding task (typically a GitHub issue) complete — it runs `npm run ship-check` end to end, fixing failures and restarting from scratch until everything's green.
 
-**Tests are part of the task, not a follow-up.** Every change to production code includes tests in the same unit of work. Use Vitest for utility functions, server-side logic, data transformations, and components that don't need a full server. Use Playwright for page flows, form submissions, and auth/UI behavior a user would actually perform. Don't import a route's `action`/`loader` directly into a Vitest test — Playwright exercises the full request cycle and is the right tool for that; ask before making an exception.
+**Tests are part of the task, not a follow-up.** Every change to production code includes tests in the same unit of work. Use Vitest for utility functions, server-side logic, data transformations, and components that don't need a full server. Use Playwright for page flows, form submissions, and auth/UI behavior a user would actually perform. Don't import a route's `action`/`loader` directly into a Vitest test — Playwright exercises the full request cycle and is the right tool for that; ask before making an exception. Never write a throwaway test file for ad-hoc confidence-checking — if you want to verify new behavior, write the permanent test for it and run just that file.
 
 **Documentation is part of the task, not a follow-up.** A change to a convention, pattern, or architectural decision updates this file in the same unit of work that made it stale — and gets a new ADR under `docs/adr/` if it's a real decision with alternatives, not a follow-up issue. Same for a component's Storybook story or a skill file's how-to steps, if the change affects them.
 
@@ -45,7 +45,8 @@ npm run test               # vitest (watch mode)
 npm run test -- --run     # vitest, single run
 npm run test -- --run app/utils.test.ts   # run a single vitest file
 npm run test:e2e:run      # npx playwright test (spins up dev server itself)
-npm run validate            # test --run + lint + typecheck (in parallel), then e2e
+npm run step-check          # typecheck + lint + format
+npm run ship-check          # full pre-completion gate: docker, typecheck, tests, build, e2e, lint, format
 npm run storybook          # start Storybook dev server (http://localhost:6006)
 npm run build-storybook   # build static Storybook
 ```
@@ -171,7 +172,7 @@ When an existing component doesn't support something a feature needs, or no suit
 - Tests needing real data hit the real `postgres_test` database via `prisma` — no mocking. Test data comes from `@quramy/prisma-fabbrica` factories in `app/factories/`; add a new factory there, not a one-off `prisma.create()` call, for any model that doesn't have one yet.
 - A second, browser-mode Storybook Vitest project runs every story's play functions and its accessibility check. `npm run test` runs both projects together.
 - Playwright e2e specs live in `tests/`. A11y is checked here too, via `expectNoAxeViolations(page)` — the same enforced bar as Storybook's check, at the rendered-page level.
-- `npm run validate` runs `test:e2e:run` after the Vitest/lint/typecheck group, not alongside it — both suites reset the same test database and can't run concurrently. `npm run test:db:reset` resets it manually.
+- `npm run test:db:reset` resets the test database manually.
 - MSW (`mocks/`) is available for stubbing third-party HTTP in tests/dev; see `mocks/README.md`.
 
 ## CI/CD

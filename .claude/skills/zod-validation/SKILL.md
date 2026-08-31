@@ -224,4 +224,3 @@ See `app/schemas/item.test.ts` and `app/schemas/community.test.ts` for full refe
 6. Wire `errorMessage={actionData?.errors.<field>}` into the relevant components, importing any shared constant straight from `<model>.ts` if one exists.
 7. Add any new i18n keys under the namespace file's existing `errors` group.
 8. Add/extend `<model>.test.ts` with edge cases (empty, over-limit, invalid enum value, valid).
-9. `npm run validate`.

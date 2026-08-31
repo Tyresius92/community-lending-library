@@ -18,4 +18,4 @@ labels: ""
 - [ ] **Storybook** — any new or modified design-system component has a story, and passes the `@storybook/addon-a11y` check. N/A if this issue doesn't touch `app/components/`.
 - [ ] **Docs** — `CLAUDE.md` updated if this issue changes something it documents (new route pattern, new model, new env var, new convention).
 - [ ] **Privacy rule** — if this issue touches Browse, Item Detail, My Loans, or Members, confirm owner identity stays hidden until a loan request is accepted, and item ownership is never shown/inferable on Members. N/A otherwise.
-- [ ] `npm run validate` passes (lint, typecheck, vitest, e2e).
+- [ ] `npm run ship-check` passes.
