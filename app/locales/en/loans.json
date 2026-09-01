@@ -30,7 +30,8 @@
     "decline": "Decline",
     "cancel": "Cancel",
     "confirmCancel": "Cancel request",
-    "close": "Close"
+    "close": "Close",
+    "checkout": "Check out"
   },
   "notices": {
     "confirmCancelTitle": "Cancel this loan?",

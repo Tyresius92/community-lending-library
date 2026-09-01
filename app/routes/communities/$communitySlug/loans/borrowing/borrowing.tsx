@@ -17,6 +17,7 @@ import type { Route } from "./+types/borrowing";
 
 const REVEALED_STATUSES: LoanStatus[] = ["accepted", "active"];
 const CANCELLABLE_STATUSES: LoanStatus[] = ["pending", "accepted"];
+const CHECKOUT_STATUSES: LoanStatus[] = ["accepted"];
 
 export const meta: Route.MetaFunction = ({ loaderData }) => [
   { title: loaderData.title },
@@ -117,6 +118,16 @@ export default function Borrowing({
                 </Table.Cell>
                 <Table.Cell>{t(`status.${loan.status}`)}</Table.Cell>
                 <Table.Cell>
+                  {CHECKOUT_STATUSES.includes(loan.status) ? (
+                    <Form
+                      method="post"
+                      action={`/communities/${communitySlug}/loans/borrowing/${loan.id}/checkout`}
+                    >
+                      <Button type="submit" variant="primary">
+                        {t("buttons.checkout")}
+                      </Button>
+                    </Form>
+                  ) : null}
                   {CANCELLABLE_STATUSES.includes(loan.status) ? (
                     <Button
                       variant="secondary"

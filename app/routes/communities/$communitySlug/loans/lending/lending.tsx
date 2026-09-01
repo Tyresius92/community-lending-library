@@ -18,6 +18,7 @@ import type { Route } from "./+types/lending";
 const REVEALED_STATUSES: LoanStatus[] = ["pending", "accepted", "active"];
 const PENDING_STATUSES: LoanStatus[] = ["pending"];
 const CANCELLABLE_STATUSES: LoanStatus[] = ["accepted"];
+const CHECKOUT_STATUSES: LoanStatus[] = ["accepted"];
 
 export const meta: Route.MetaFunction = ({ loaderData }) => [
   { title: loaderData.title },
@@ -134,6 +135,16 @@ export default function Lending({ loaderData, params }: Route.ComponentProps) {
                         </Button>
                       </Form>
                     </>
+                  ) : null}
+                  {CHECKOUT_STATUSES.includes(loan.status) ? (
+                    <Form
+                      method="post"
+                      action={`/communities/${communitySlug}/loans/lending/${loan.id}/checkout`}
+                    >
+                      <Button type="submit" variant="primary">
+                        {t("buttons.checkout")}
+                      </Button>
+                    </Form>
                   ) : null}
                   {CANCELLABLE_STATUSES.includes(loan.status) ? (
                     <Button
