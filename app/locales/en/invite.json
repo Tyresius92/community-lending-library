@@ -23,7 +23,7 @@
   "buttons": {
     "generateLink": "Generate link",
     "revoke": "Revoke",
-    "confirmRevoke": "Revoke",
+    "confirmRevoke": "Revoke link",
     "cancel": "Cancel",
     "close": "Close"
   },
