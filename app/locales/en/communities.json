@@ -15,7 +15,8 @@
     "items": "Items",
     "myItems": "My items",
     "members": "Members",
-    "loans": "Loans"
+    "loans": "Loans",
+    "invite": "Invite"
   },
   "empty": {
     "noCommunities": "No communities to browse yet."
@@ -56,6 +57,7 @@
     "joinPolicyInvalid": "Choose who can join",
     "unexpectedWithMessage": "An unexpected error occurred: {{message}}",
     "unknown": "Unknown Error",
-    "notFound": "Community not found"
+    "notFound": "Community not found",
+    "forbidden": "You don't have permission to view this page"
   }
 }

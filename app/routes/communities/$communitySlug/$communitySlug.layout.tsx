@@ -4,6 +4,7 @@ import { isRouteErrorResponse, Outlet, useRouteError } from "react-router";
 import { Link } from "~/components/link/link";
 import { prisma } from "~/db.server";
 import { getUserId, loginRedirect } from "~/session.server";
+import { meetsMinRole } from "~/utils/community_role.server";
 
 import type { Route } from "./+types/$communitySlug.layout";
 
@@ -23,7 +24,7 @@ export const loader = async ({ params, request, url }: Route.LoaderArgs) => {
 
   const membership = await prisma.communityMembership.findUnique({
     where: { userId_communityId: { userId, communityId: community.id } },
-    select: { removedAt: true },
+    select: { removedAt: true, role: true },
   });
 
   if (membership?.removedAt) {
@@ -34,12 +35,18 @@ export const loader = async ({ params, request, url }: Route.LoaderArgs) => {
     throw new Response("Not Found", { status: 404 });
   }
 
-  return { community };
+  return {
+    community,
+    canManageInvites: membership
+      ? meetsMinRole(membership.role, "admin")
+      : false,
+  };
 };
 
 export default function CommunityLayout({ loaderData }: Route.ComponentProps) {
   const { t } = useTranslation("communities");
   const { slug } = loaderData.community;
+  const { canManageInvites } = loaderData;
 
   return (
     <main>
@@ -66,6 +73,13 @@ export default function CommunityLayout({ loaderData }: Route.ComponentProps) {
             <li>
               <Link to={`/communities/${slug}/loans`}>{t("nav.loans")}</Link>
             </li>
+            {canManageInvites ? (
+              <li>
+                <Link to={`/communities/${slug}/invite`}>
+                  {t("nav.invite")}
+                </Link>
+              </li>
+            ) : null}
           </ul>
         </nav>
       </header>
@@ -90,6 +104,10 @@ export function ErrorBoundary() {
 
   if (error.status === 404) {
     return <div>{t("errors.notFound")}</div>;
+  }
+
+  if (error.status === 403) {
+    return <div>{t("errors.forbidden")}</div>;
   }
 
   return (
