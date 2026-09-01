@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "invite": "Invite"
+  },
+  "headings": {
+    "invite": "Invite links"
+  },
+  "labels": {
+    "expiryPreset": "Link expires",
+    "link": "Link",
+    "created": "Created",
+    "expires": "Expires",
+    "createdBy": "Created by",
+    "actions": "Actions"
+  },
+  "options": {
+    "expiry1Day": "1 day",
+    "expiry7Days": "7 days",
+    "expiry30Days": "30 days",
+    "expiry90Days": "90 days",
+    "expiryNever": "Never"
+  },
+  "buttons": {
+    "generateLink": "Generate link",
+    "revoke": "Revoke",
+    "confirmRevoke": "Revoke",
+    "cancel": "Cancel",
+    "close": "Close"
+  },
+  "notices": {
+    "noActiveLinks": "No active invite links.",
+    "neverExpires": "Never",
+    "confirmRevokeTitle": "Revoke this invite link?",
+    "confirmRevokeBody": "Anyone with this link will no longer be able to use it to join."
+  },
+  "errors": {
+    "expiryInvalid": "Choose a valid expiry option"
+  }
+}
