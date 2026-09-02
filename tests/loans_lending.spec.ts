@@ -501,6 +501,94 @@ test.describe("lending", () => {
       expect(persisted.status).toBe("expired");
     });
 
+    test("owner can check out an accepted loan", async ({
+      page,
+      withCommunityMember,
+    }) => {
+      const { community, user: owner } = await withCommunityMember();
+      const ownerMembership = await prisma.communityMembership.findFirstOrThrow(
+        {
+          where: { userId: owner.id, communityId: community.id },
+        },
+      );
+      const item = await ItemFactory.create({
+        community: { connect: { id: community.id } },
+        ownerMembership: { connect: { id: ownerMembership.id } },
+      });
+      const borrower = await UserFactory.create();
+      await CommunityMembershipFactory.create({
+        user: { connect: { id: borrower.id } },
+        community: { connect: { id: community.id } },
+      });
+      const loan = await LoanFactory.create({
+        item: { connect: { id: item.id } },
+        community: { connect: { id: community.id } },
+        borrower: { connect: { id: borrower.id } },
+        owner: { connect: { id: owner.id } },
+        status: "accepted",
+      });
+
+      await page.goto(`/communities/${community.slug}/loans/lending`);
+      await page.getByRole("button", { name: "Check out" }).click();
+
+      await expect(page).toHaveURL(
+        `/communities/${community.slug}/loans/lending`,
+      );
+      await expect(page.getByText("Active")).toBeVisible();
+
+      const persisted = await prisma.loan.findUniqueOrThrow({
+        where: { id: loan.id },
+      });
+      expect(persisted.status).toBe("active");
+      expect(persisted.checkedOutAt).not.toBeNull();
+    });
+
+    for (const status of [
+      "pending",
+      "active",
+      "completed",
+      "declined",
+      "cancelled",
+      "expired",
+    ] as const) {
+      test(`cannot check out a loan that is ${status}`, async ({
+        page,
+        withCommunityMember,
+      }) => {
+        const { community, user: owner } = await withCommunityMember();
+        const ownerMembership =
+          await prisma.communityMembership.findFirstOrThrow({
+            where: { userId: owner.id, communityId: community.id },
+          });
+        const item = await ItemFactory.create({
+          community: { connect: { id: community.id } },
+          ownerMembership: { connect: { id: ownerMembership.id } },
+        });
+        const borrower = await UserFactory.create();
+        await CommunityMembershipFactory.create({
+          user: { connect: { id: borrower.id } },
+          community: { connect: { id: community.id } },
+        });
+        const loan = await LoanFactory.create({
+          item: { connect: { id: item.id } },
+          community: { connect: { id: community.id } },
+          borrower: { connect: { id: borrower.id } },
+          owner: { connect: { id: owner.id } },
+          status,
+        });
+
+        const response = await page.request.post(
+          `/communities/${community.slug}/loans/lending/${loan.id}/checkout`,
+        );
+        expect(response.status()).toBe(403);
+
+        const persisted = await prisma.loan.findUniqueOrThrow({
+          where: { id: loan.id },
+        });
+        expect(persisted.status).toBe(status);
+      });
+    }
+
     test("cannot cancel an accepted loan that has already been checked out", async ({
       page,
       withCommunityMember,
@@ -540,7 +628,7 @@ test.describe("lending", () => {
       expect(persisted.status).toBe("accepted");
     });
 
-    for (const action of ["accept", "decline", "cancel"] as const) {
+    for (const action of ["accept", "decline", "cancel", "checkout"] as const) {
       test(`only the item's owner can ${action} a loan`, async ({
         browser,
         withCommunityMember,
@@ -564,7 +652,10 @@ test.describe("lending", () => {
           community: { connect: { id: community.id } },
           borrower: { connect: { id: borrower.id } },
           owner: { connect: { id: owner.id } },
-          status: action === "cancel" ? "accepted" : "pending",
+          status:
+            action === "cancel" || action === "checkout"
+              ? "accepted"
+              : "pending",
         });
 
         for (const role of ["member", "admin", "owner"] as const) {
@@ -592,7 +683,7 @@ test.describe("lending", () => {
           where: { id: loan.id },
         });
         expect(persisted.status).toBe(
-          action === "cancel" ? "accepted" : "pending",
+          action === "cancel" || action === "checkout" ? "accepted" : "pending",
         );
       });
     }
