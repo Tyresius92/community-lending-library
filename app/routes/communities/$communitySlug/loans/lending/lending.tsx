@@ -19,6 +19,7 @@ const REVEALED_STATUSES: LoanStatus[] = ["pending", "accepted", "active"];
 const PENDING_STATUSES: LoanStatus[] = ["pending"];
 const CANCELLABLE_STATUSES: LoanStatus[] = ["accepted"];
 const CHECKOUT_STATUSES: LoanStatus[] = ["accepted"];
+const CONFIRM_RETURN_STATUSES: LoanStatus[] = ["active"];
 
 export const meta: Route.MetaFunction = ({ loaderData }) => [
   { title: loaderData.title },
@@ -51,6 +52,7 @@ export const loader = async ({
       id: true,
       status: true,
       expiresAt: true,
+      borrowerConfirmedReturnAt: true,
       item: { select: { id: true, name: true } },
       borrower: {
         select: {
@@ -72,6 +74,7 @@ export const loader = async ({
         id: loan.id,
         status,
         item: loan.item,
+        borrowerConfirmedReturnAt: loan.borrowerConfirmedReturnAt,
         borrowerDisplayName: isRevealed
           ? (loan.borrower.memberships[0]?.displayName ?? null)
           : null,
@@ -105,9 +108,7 @@ export default function Lending({ loaderData, params }: Route.ComponentProps) {
             {loans.map((loan) => (
               <Table.Row key={loan.id}>
                 <Table.RowHeader>
-                  <Link
-                    to={`/communities/${communitySlug}/items/${loan.item.id}`}
-                  >
+                  <Link to={`/communities/${communitySlug}/loans/${loan.id}`}>
                     {loan.item.name}
                   </Link>
                 </Table.RowHeader>
@@ -155,6 +156,21 @@ export default function Lending({ loaderData, params }: Route.ComponentProps) {
                     >
                       {t("buttons.cancel")}
                     </Button>
+                  ) : null}
+                  {CONFIRM_RETURN_STATUSES.includes(loan.status) ? (
+                    <>
+                      <Form
+                        method="post"
+                        action={`/communities/${communitySlug}/loans/lending/${loan.id}/confirm_return`}
+                      >
+                        <Button type="submit" variant="primary">
+                          {t("buttons.confirmReturn")}
+                        </Button>
+                      </Form>
+                      {loan.borrowerConfirmedReturnAt !== null ? (
+                        <p>{t("notices.borrowerReportedReturn")}</p>
+                      ) : null}
+                    </>
                   ) : null}
                 </Table.Cell>
               </Table.Row>

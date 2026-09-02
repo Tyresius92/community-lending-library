@@ -9,5 +9,14 @@
     "button": "Log in",
     "fallbackLabel": "If the button doesn't work, copy this link into your browser:",
     "disclaimer": "If you didn't request this email, you can safely ignore it."
+  },
+  "returnFlagged": {
+    "subject": "{{itemName}} has been marked as returned",
+    "preview": "{{itemName}} has been marked as returned — confirm you have it back.",
+    "heading": "A return was reported",
+    "body": "The borrower says they've returned \"{{itemName}}\". Once you have it back in hand, confirm the return to complete the loan.",
+    "button": "View loan",
+    "fallbackLabel": "If the button doesn't work, copy this link into your browser:",
+    "disclaimer": "If you weren't expecting this, check the loan details for more context."
   }
 }

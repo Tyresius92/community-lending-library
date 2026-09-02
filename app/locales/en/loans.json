@@ -31,12 +31,16 @@
     "cancel": "Cancel",
     "confirmCancel": "Cancel request",
     "close": "Close",
-    "checkout": "Check out"
+    "checkout": "Check out",
+    "confirmReturn": "I got it back",
+    "iReturnedIt": "I returned it"
   },
   "notices": {
     "confirmCancelTitle": "Cancel this loan?",
     "confirmCancelBody": "This can't be undone.",
     "noBorrowing": "You don't have any loans yet.",
-    "noLending": "No one has requested to borrow from you yet."
+    "noLending": "No one has requested to borrow from you yet.",
+    "borrowerReportedReturn": "The borrower says this has been returned.",
+    "returnReportedByYou": "You reported this as returned. Waiting for the owner to confirm."
   }
 }

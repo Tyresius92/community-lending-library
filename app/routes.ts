@@ -78,6 +78,10 @@ export default [
               ":loanId/checkout",
               "routes/communities/$communitySlug/loans/borrowing/$loanId/checkout/checkout.tsx",
             ),
+            route(
+              ":loanId/return",
+              "routes/communities/$communitySlug/loans/borrowing/$loanId/return/return.tsx",
+            ),
           ]),
           ...prefix("lending", [
             index(
@@ -98,6 +102,10 @@ export default [
             route(
               ":loanId/checkout",
               "routes/communities/$communitySlug/loans/lending/$loanId/checkout/checkout.tsx",
+            ),
+            route(
+              ":loanId/confirm_return",
+              "routes/communities/$communitySlug/loans/lending/$loanId/confirm_return/confirm_return.tsx",
             ),
           ]),
         ]),

@@ -18,6 +18,7 @@ import type { Route } from "./+types/borrowing";
 const REVEALED_STATUSES: LoanStatus[] = ["accepted", "active"];
 const CANCELLABLE_STATUSES: LoanStatus[] = ["pending", "accepted"];
 const CHECKOUT_STATUSES: LoanStatus[] = ["accepted"];
+const FLAG_RETURN_STATUSES: LoanStatus[] = ["active"];
 
 export const meta: Route.MetaFunction = ({ loaderData }) => [
   { title: loaderData.title },
@@ -50,6 +51,7 @@ export const loader = async ({
       id: true,
       status: true,
       expiresAt: true,
+      borrowerConfirmedReturnAt: true,
       item: { select: { id: true, name: true } },
       owner: {
         select: {
@@ -71,6 +73,7 @@ export const loader = async ({
         id: loan.id,
         status,
         item: loan.item,
+        borrowerConfirmedReturnAt: loan.borrowerConfirmedReturnAt,
         ownerDisplayName: isRevealed
           ? (loan.owner.memberships[0]?.displayName ?? null)
           : null,
@@ -107,9 +110,7 @@ export default function Borrowing({
             {loans.map((loan) => (
               <Table.Row key={loan.id}>
                 <Table.RowHeader>
-                  <Link
-                    to={`/communities/${communitySlug}/items/${loan.item.id}`}
-                  >
+                  <Link to={`/communities/${communitySlug}/loans/${loan.id}`}>
                     {loan.item.name}
                   </Link>
                 </Table.RowHeader>
@@ -137,6 +138,21 @@ export default function Borrowing({
                     >
                       {t("buttons.cancel")}
                     </Button>
+                  ) : null}
+                  {FLAG_RETURN_STATUSES.includes(loan.status) &&
+                  loan.borrowerConfirmedReturnAt === null ? (
+                    <Form
+                      method="post"
+                      action={`/communities/${communitySlug}/loans/borrowing/${loan.id}/return`}
+                    >
+                      <Button type="submit" variant="primary">
+                        {t("buttons.iReturnedIt")}
+                      </Button>
+                    </Form>
+                  ) : null}
+                  {FLAG_RETURN_STATUSES.includes(loan.status) &&
+                  loan.borrowerConfirmedReturnAt !== null ? (
+                    <p>{t("notices.returnReportedByYou")}</p>
                   ) : null}
                 </Table.Cell>
               </Table.Row>
