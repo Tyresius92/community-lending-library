@@ -173,6 +173,49 @@ test.describe("borrowing", () => {
     await borrowerContext.close();
   });
 
+  test("the item name links to the loan detail page, not the item page", async ({
+    browser,
+    withCommunityMember,
+  }) => {
+    const { community, user: owner } = await withCommunityMember();
+    const ownerMembership = await prisma.communityMembership.findFirstOrThrow({
+      where: { userId: owner.id, communityId: community.id },
+    });
+    const item = await ItemFactory.create({
+      community: { connect: { id: community.id } },
+      ownerMembership: { connect: { id: ownerMembership.id } },
+    });
+
+    const borrowerContext = await browser.newContext();
+    const borrowerPage = await borrowerContext.newPage();
+    const borrower = await loginAsNewUser(
+      borrowerContext,
+      `borrower-${faker.string.uuid()}@example.com`,
+    );
+    await CommunityMembershipFactory.create({
+      user: { connect: { id: borrower.id } },
+      community: { connect: { id: community.id } },
+    });
+    const loan = await LoanFactory.create({
+      item: { connect: { id: item.id } },
+      community: { connect: { id: community.id } },
+      borrower: { connect: { id: borrower.id } },
+      owner: { connect: { id: owner.id } },
+      status: "pending",
+    });
+
+    await borrowerPage.goto(`/communities/${community.slug}/loans/borrowing`);
+
+    await expect(
+      borrowerPage.getByRole("link", { name: item.name }),
+    ).toHaveAttribute(
+      "href",
+      `/communities/${community.slug}/loans/${loan.id}`,
+    );
+
+    await borrowerContext.close();
+  });
+
   test("shows a pending loan with a cancel action and no owner name", async ({
     browser,
     withCommunityMember,
@@ -584,6 +627,230 @@ test.describe("borrowing", () => {
         where: { id: loan.id },
       });
       expect(persisted.status).toBe("accepted");
+
+      await borrowerContext.close();
+    });
+
+    test("borrower can flag an active loan as returned", async ({
+      browser,
+      withCommunityMember,
+    }) => {
+      const { community, user: owner } = await withCommunityMember();
+      const ownerMembership = await prisma.communityMembership.findFirstOrThrow(
+        {
+          where: { userId: owner.id, communityId: community.id },
+        },
+      );
+      const item = await ItemFactory.create({
+        community: { connect: { id: community.id } },
+        ownerMembership: { connect: { id: ownerMembership.id } },
+      });
+
+      const borrowerContext = await browser.newContext();
+      const borrowerPage = await borrowerContext.newPage();
+      const borrower = await loginAsNewUser(
+        borrowerContext,
+        `borrower-${faker.string.uuid()}@example.com`,
+      );
+      await CommunityMembershipFactory.create({
+        user: { connect: { id: borrower.id } },
+        community: { connect: { id: community.id } },
+      });
+      const loan = await LoanFactory.create({
+        item: { connect: { id: item.id } },
+        community: { connect: { id: community.id } },
+        borrower: { connect: { id: borrower.id } },
+        owner: { connect: { id: owner.id } },
+        status: "active",
+        checkedOutAt: new Date(),
+      });
+
+      await borrowerPage.goto(`/communities/${community.slug}/loans/borrowing`);
+      await borrowerPage.getByRole("button", { name: "I returned it" }).click();
+
+      await expect(borrowerPage).toHaveURL(
+        `/communities/${community.slug}/loans/borrowing`,
+      );
+      await expect(borrowerPage.getByText("Active")).toBeVisible();
+      await expect(
+        borrowerPage.getByRole("button", { name: "I returned it" }),
+      ).toBeHidden();
+      await expect(
+        borrowerPage.getByText(
+          "You reported this as returned. Waiting for the owner to confirm.",
+        ),
+      ).toBeVisible();
+
+      const persisted = await prisma.loan.findUniqueOrThrow({
+        where: { id: loan.id },
+      });
+      expect(persisted.status).toBe("active");
+      expect(persisted.borrowerConfirmedReturnAt).not.toBeNull();
+
+      await borrowerContext.close();
+    });
+
+    test("borrower cannot flag a return twice", async ({
+      browser,
+      withCommunityMember,
+    }) => {
+      const { community, user: owner } = await withCommunityMember();
+      const ownerMembership = await prisma.communityMembership.findFirstOrThrow(
+        {
+          where: { userId: owner.id, communityId: community.id },
+        },
+      );
+      const item = await ItemFactory.create({
+        community: { connect: { id: community.id } },
+        ownerMembership: { connect: { id: ownerMembership.id } },
+      });
+
+      const borrowerContext = await browser.newContext();
+      const borrowerPage = await borrowerContext.newPage();
+      const borrower = await loginAsNewUser(
+        borrowerContext,
+        `borrower-${faker.string.uuid()}@example.com`,
+      );
+      await CommunityMembershipFactory.create({
+        user: { connect: { id: borrower.id } },
+        community: { connect: { id: community.id } },
+      });
+      const loan = await LoanFactory.create({
+        item: { connect: { id: item.id } },
+        community: { connect: { id: community.id } },
+        borrower: { connect: { id: borrower.id } },
+        owner: { connect: { id: owner.id } },
+        status: "active",
+        checkedOutAt: new Date(),
+        borrowerConfirmedReturnAt: new Date(),
+      });
+
+      const response = await borrowerPage.request.post(
+        `/communities/${community.slug}/loans/borrowing/${loan.id}/return`,
+      );
+      expect(response.status()).toBe(403);
+
+      const persisted = await prisma.loan.findUniqueOrThrow({
+        where: { id: loan.id },
+      });
+      expect(persisted.status).toBe("active");
+
+      await borrowerContext.close();
+    });
+
+    for (const status of [
+      "pending",
+      "accepted",
+      "completed",
+      "declined",
+      "cancelled",
+      "expired",
+    ] as const) {
+      test(`cannot flag a return for a loan that is ${status}`, async ({
+        browser,
+        withCommunityMember,
+      }) => {
+        const { community, user: owner } = await withCommunityMember();
+        const ownerMembership =
+          await prisma.communityMembership.findFirstOrThrow({
+            where: { userId: owner.id, communityId: community.id },
+          });
+        const item = await ItemFactory.create({
+          community: { connect: { id: community.id } },
+          ownerMembership: { connect: { id: ownerMembership.id } },
+        });
+
+        const borrowerContext = await browser.newContext();
+        const borrowerPage = await borrowerContext.newPage();
+        const borrower = await loginAsNewUser(
+          borrowerContext,
+          `borrower-${faker.string.uuid()}@example.com`,
+        );
+        await CommunityMembershipFactory.create({
+          user: { connect: { id: borrower.id } },
+          community: { connect: { id: community.id } },
+        });
+        const loan = await LoanFactory.create({
+          item: { connect: { id: item.id } },
+          community: { connect: { id: community.id } },
+          borrower: { connect: { id: borrower.id } },
+          owner: { connect: { id: owner.id } },
+          status,
+        });
+
+        const response = await borrowerPage.request.post(
+          `/communities/${community.slug}/loans/borrowing/${loan.id}/return`,
+        );
+        expect(response.status()).toBe(403);
+
+        const persisted = await prisma.loan.findUniqueOrThrow({
+          where: { id: loan.id },
+        });
+        expect(persisted.status).toBe(status);
+
+        await borrowerContext.close();
+      });
+    }
+
+    test("only the requesting borrower can flag a return", async ({
+      browser,
+      withCommunityMember,
+    }) => {
+      const { community, user: owner } = await withCommunityMember();
+      const ownerMembership = await prisma.communityMembership.findFirstOrThrow(
+        {
+          where: { userId: owner.id, communityId: community.id },
+        },
+      );
+      const item = await ItemFactory.create({
+        community: { connect: { id: community.id } },
+        ownerMembership: { connect: { id: ownerMembership.id } },
+      });
+
+      const borrowerContext = await browser.newContext();
+      const borrower = await loginAsNewUser(
+        borrowerContext,
+        `borrower-${faker.string.uuid()}@example.com`,
+      );
+      await CommunityMembershipFactory.create({
+        user: { connect: { id: borrower.id } },
+        community: { connect: { id: community.id } },
+      });
+      const loan = await LoanFactory.create({
+        item: { connect: { id: item.id } },
+        community: { connect: { id: community.id } },
+        borrower: { connect: { id: borrower.id } },
+        owner: { connect: { id: owner.id } },
+        status: "active",
+        checkedOutAt: new Date(),
+      });
+
+      for (const role of ["member", "admin", "owner"] as const) {
+        const otherContext = await browser.newContext();
+        const otherPage = await otherContext.newPage();
+        const otherUser = await loginAsNewUser(
+          otherContext,
+          `other-${role}-${faker.string.uuid()}@example.com`,
+        );
+        await CommunityMembershipFactory.create({
+          user: { connect: { id: otherUser.id } },
+          community: { connect: { id: community.id } },
+          role,
+        });
+
+        const response = await otherPage.request.post(
+          `/communities/${community.slug}/loans/borrowing/${loan.id}/return`,
+        );
+        expect(response.status()).toBe(404);
+
+        await otherContext.close();
+      }
+
+      const persisted = await prisma.loan.findUniqueOrThrow({
+        where: { id: loan.id },
+      });
+      expect(persisted.status).toBe("active");
+      expect(persisted.borrowerConfirmedReturnAt).toBeNull();
 
       await borrowerContext.close();
     });
