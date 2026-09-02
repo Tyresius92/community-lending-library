@@ -108,6 +108,10 @@ export default [
               "routes/communities/$communitySlug/loans/lending/$loanId/confirm_return/confirm_return.tsx",
             ),
           ]),
+          route(
+            ":loanId",
+            "routes/communities/$communitySlug/loans/$loanId/$loanId.tsx",
+          ),
         ]),
       ],
     ),

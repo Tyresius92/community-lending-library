@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A React Router (Framework Mode) + Prisma + PostgreSQL app for a community lending library — members share items within a community and track loans through a request/accept/checkout/return lifecycle.
 
-The Prisma schema (`prisma/schema.prisma`) already models the full domain — `Community`, `CommunityMembership`, `Item`, `Loan`, `Message`, `InviteToken`. Application code has partially caught up: auth, communities, and `Item` management are wired up; `Loan`, `Message`, and `InviteToken` are not yet. Check whether the schema already has the shape you need before changing it. See [docs/adr/](docs/adr/) for the reasoning behind major decisions.
+The Prisma schema (`prisma/schema.prisma`) already models the full domain — `Community`, `CommunityMembership`, `Item`, `Loan`, `Message`, `InviteToken`. Application code has partially caught up: auth, communities, `Item` management, `Loan`, and `InviteToken` are wired up; `Message` is not yet. Check whether the schema already has the shape you need before changing it. See [docs/adr/](docs/adr/) for the reasoning behind major decisions.
 
 ## How we work
 
@@ -118,7 +118,7 @@ export default [
 
 See the live version in [app/routes.ts](app/routes.ts) and `app/routes/communities/`.
 
-**Community IA**: community-scoped screens (`items`, `my_items`, `members`, `loans`) nest under `/communities/:communitySlug` as siblings. `/communities` one level up is the only place "my communities" (join/leave/switch) lives. Items are modeled as fully separate listings per community. `Loan`/`Message` aren't wired up yet.
+**Community IA**: community-scoped screens (`items`, `my_items`, `members`, `loans`) nest under `/communities/:communitySlug` as siblings. `/communities` one level up is the only place "my communities" (join/leave/switch) lives. Items are modeled as fully separate listings per community. `Message` isn't wired up yet.
 
 **Privacy rule** (enforced in loaders/actions, not just hidden client-side): item owner identity is never shown to a browsing member — a neutral placeholder ("a neighbor") renders instead, until that viewer's own loan request on the item is accepted. `my_items` is exempt (always your own items). The Members list must never show or allow inferring item ownership. See [ADR-004](docs/adr/ADR-004-owner-identity-privacy-rule.md) for why.
 
