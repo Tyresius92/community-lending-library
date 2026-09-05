@@ -44,7 +44,9 @@ export async function getUser(request: Request) {
 }
 
 export function loginRedirect(url: URL): Response {
-  const searchParams = new URLSearchParams([["redirectTo", url.pathname]]);
+  const searchParams = new URLSearchParams([
+    ["redirectTo", url.pathname + url.search],
+  ]);
   return redirect(`/login?${searchParams}`);
 }
 
