@@ -5,6 +5,7 @@ import communities from "~/locales/en/communities.json";
 import home from "~/locales/en/home.json";
 import invite from "~/locales/en/invite.json";
 import items from "~/locales/en/items.json";
+import join from "~/locales/en/join.json";
 import loans from "~/locales/en/loans.json";
 import login from "~/locales/en/login.json";
 import members from "~/locales/en/members.json";
@@ -18,6 +19,7 @@ const en = {
   loans,
   members,
   invite,
+  join,
 };
 
 const resources = { en } satisfies Resource;

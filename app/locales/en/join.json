@@ -1,0 +1,20 @@
+{
+  "meta": {
+    "title": "Join community"
+  },
+  "headings": {
+    "join": "Join {{communityName}}"
+  },
+  "labels": {
+    "displayName": "Display name"
+  },
+  "buttons": {
+    "join": "Join community"
+  },
+  "errors": {
+    "invalid": "That invite link isn't valid.",
+    "expired": "That invite link has expired.",
+    "revoked": "That invite link has been revoked.",
+    "displayNameRequired": "Display name is required"
+  }
+}
