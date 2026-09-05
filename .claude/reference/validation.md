@@ -1,11 +1,6 @@
----
-name: zod-validation
-description: Validate route action FormData with Zod. Use when adding or changing form validation in a route action, or wiring a new form's errors into TextInput/TextArea/Select/RadioGroup.
----
+# Validation (Zod)
 
-# Zod Validation
-
-Route actions validate `FormData` with [Zod](https://zod.dev) schemas under `app/schemas/<model>.ts` — see [CLAUDE.md](../../../CLAUDE.md) for where this fits in the app's architecture.
+See [ADR-003](../../docs/adr/ADR-003-zod-for-form-validation.md) for why. Route actions validate `FormData` with [Zod](https://zod.dev) schemas under `app/schemas/<model>.ts` — one file per model, a base schema plus named variants.
 
 ## The core split
 
@@ -116,7 +111,7 @@ On success, `result.data` is the fully-typed, already-trimmed output — use it 
 
 This `fieldMessage` closure is **per-route, not shared**, even when two routes validate the same model (`my_items/new` and `my_items/$itemId/edit` each build their own `messages` map and closure). A field with only one possible code doesn't need a map at all — write the `t()` call inline (see the community join action in `app/routes/communities/$communitySlug/$communitySlug.tsx`).
 
-New i18n keys referenced by a `messages` map go under the route's existing namespace file's `errors` group (`app/locales/en/<namespace>.json`), alongside `labels`/`buttons`/`nav`/`meta` — never a new per-screen nesting. See [CLAUDE.md](../../../CLAUDE.md)'s i18n section for the full convention.
+New i18n keys referenced by a `messages` map go under the route's existing namespace file's `errors` group (`app/locales/en/<namespace>.json`), alongside `labels`/`buttons`/`nav`/`meta` — never a new per-screen nesting. See [i18n.md](i18n.md) for the full convention.
 
 ## Step 3: Wire errors into components
 
@@ -172,7 +167,7 @@ Keep every branch of an action's `data()` calls returning the **same errors shap
 
 ## Testing
 
-Test the schema directly — there's no parse helper to test. Use this repo's `it.each` object-array + `$name`-title convention, with a small local `buildFormData` helper (this app's first tests to construct `FormData` by hand):
+Test the schema directly — there's no parse helper to test. Use this repo's `it.each` object-array + `$name`-title convention, with a small local `buildFormData` helper:
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -224,3 +219,7 @@ See `app/schemas/item.test.ts` and `app/schemas/community.test.ts` for full refe
 6. Wire `errorMessage={actionData?.errors.<field>}` into the relevant components, importing any shared constant straight from `<model>.ts` if one exists.
 7. Add any new i18n keys under the namespace file's existing `errors` group.
 8. Add/extend `<model>.test.ts` with edge cases (empty, over-limit, invalid enum value, valid).
+
+## Standing questions
+
+None yet — a new schema following the pattern above is Claude's call.
