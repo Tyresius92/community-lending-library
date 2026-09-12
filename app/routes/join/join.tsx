@@ -126,22 +126,41 @@ export const action = async ({ request, context, url }: Route.ActionArgs) => {
 };
 
 export default function Join({ loaderData, actionData }: Route.ComponentProps) {
-  const { t } = useTranslation("join");
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") ?? "";
-  const user = useUser();
 
   if (loaderData.status === "error") {
     return (
-      <div>
+      <main>
         <p>{loaderData.errorMessage}</p>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div>
-      <h1>{t("headings.join", { communityName: loaderData.communityName })}</h1>
+    <JoinConfirmForm
+      token={token}
+      communityName={loaderData.communityName}
+      errors={actionData?.errors}
+    />
+  );
+}
+
+function JoinConfirmForm({
+  token,
+  communityName,
+  errors,
+}: {
+  token: string;
+  communityName: string;
+  errors?: { displayName: string };
+}) {
+  const { t } = useTranslation("join");
+  const user = useUser();
+
+  return (
+    <main>
+      <h1>{t("headings.join", { communityName })}</h1>
       <Form method="post">
         <input type="hidden" name="token" value={token} />
         <TextInput
@@ -149,10 +168,10 @@ export default function Join({ loaderData, actionData }: Route.ComponentProps) {
           name="displayName"
           type="text"
           defaultValue={suggestDisplayNameFromEmail(user.email)}
-          errorMessage={actionData?.errors.displayName}
+          errorMessage={errors?.displayName}
         />
         <Button type="submit">{t("buttons.join")}</Button>
       </Form>
-    </div>
+    </main>
   );
 }
