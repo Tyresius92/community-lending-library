@@ -33,7 +33,7 @@
     "@react-router/serve": "8.3.0",
     "@sentry/profiling-node": "10.69.0",
     "@sentry/react-router": "10.69.0",
-    "cross-env": "7.0.3",
+    "cross-env": "10.1.0",
     "dotenv": "17.4.2",
     "i18next": "26.3.6",
     "isbot": "5.2.1",
