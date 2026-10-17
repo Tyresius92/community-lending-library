@@ -4,11 +4,11 @@ import { data, redirect, Form } from "react-router";
 import { Button } from "~/components/button/button";
 import { TextInput } from "~/components/text_input/text_input";
 import { prisma } from "~/db.server";
-import { Prisma } from "~/generated/prisma/client";
 import { getInstance, getLocale } from "~/i18n/middleware.server";
 import { communityJoinSchema } from "~/schemas/community";
 import { getUserId, loginRedirect } from "~/session.server";
 import { suggestDisplayNameFromEmail, useUser } from "~/utils";
+import { joinCommunity } from "~/utils/community_join.server";
 
 import type { Route } from "./+types/$communitySlug";
 
@@ -117,33 +117,13 @@ export const action = async ({
     throw new Response("Not Found", { status: 404 });
   }
 
-  const existingMembership = await prisma.communityMembership.findUnique({
-    where: { userId_communityId: { userId, communityId: community.id } },
+  const joinResult = await joinCommunity({
+    userId,
+    communityId: community.id,
+    displayName,
   });
-  if (existingMembership) {
-    if (existingMembership.removedAt) {
-      throw new Response("Not Found", { status: 404 });
-    }
-    return redirect(`/communities/${community.slug}`);
-  }
-
-  try {
-    await prisma.communityMembership.create({
-      data: {
-        userId,
-        communityId: community.id,
-        role: "member",
-        displayName,
-      },
-    });
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
-      return redirect(`/communities/${community.slug}`);
-    }
-    throw error;
+  if (joinResult.status === "banned") {
+    throw new Response("Not Found", { status: 404 });
   }
 
   return redirect(`/communities/${community.slug}`);

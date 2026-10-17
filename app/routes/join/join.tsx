@@ -4,12 +4,12 @@ import { data, redirect, Form, useSearchParams } from "react-router";
 import { Button } from "~/components/button/button";
 import { TextInput } from "~/components/text_input/text_input";
 import { prisma } from "~/db.server";
-import { Prisma } from "~/generated/prisma/client";
 import { getInstance, getLocale } from "~/i18n/middleware.server";
 import { validateInviteToken } from "~/models/invite_token.server";
 import { communityJoinSchema } from "~/schemas/community";
 import { getUserId, loginRedirect } from "~/session.server";
 import { suggestDisplayNameFromEmail, useUser } from "~/utils";
+import { joinCommunity } from "~/utils/community_join.server";
 
 import type { Route } from "./+types/join";
 
@@ -103,23 +103,13 @@ export const action = async ({ request, context, url }: Route.ActionArgs) => {
 
   const { displayName } = parsed.data;
 
-  try {
-    await prisma.communityMembership.create({
-      data: {
-        userId,
-        communityId: result.community.id,
-        role: "member",
-        displayName,
-      },
-    });
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
-      return redirect(`/communities/${result.community.slug}`);
-    }
-    throw error;
+  const joinResult = await joinCommunity({
+    userId,
+    communityId: result.community.id,
+    displayName,
+  });
+  if (joinResult.status === "banned") {
+    throw new Response("Not Found", { status: 404 });
   }
 
   return redirect(`/communities/${result.community.slug}`);
