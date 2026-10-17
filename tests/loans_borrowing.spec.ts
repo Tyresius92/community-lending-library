@@ -4,6 +4,7 @@ import { prisma } from "~/db.server";
 import { CommunityMembershipFactory } from "~/factories/community_membership_factory.server";
 import { ItemFactory } from "~/factories/item_factory.server";
 import { LoanFactory } from "~/factories/loan_factory.server";
+import { UserFactory } from "~/factories/user_factory.server";
 
 import { expect, test } from "./fixtures";
 import { expectNoAxeViolations } from "./helpers/axe";
@@ -406,7 +407,8 @@ test.describe("borrowing", () => {
       });
 
       const response = await borrowerPage.request.post(
-        `/communities/${community.slug}/loans/borrowing/${loan.id}/cancel`,
+        `/communities/${community.slug}/loans/${loan.id}`,
+        { form: { intent: "cancel" } },
       );
       expect(response.status()).toBe(200);
 
@@ -454,7 +456,8 @@ test.describe("borrowing", () => {
       });
 
       const response = await borrowerPage.request.post(
-        `/communities/${community.slug}/loans/borrowing/${loan.id}/cancel`,
+        `/communities/${community.slug}/loans/${loan.id}`,
+        { form: { intent: "cancel" } },
       );
       expect(response.status()).toBe(403);
 
@@ -557,7 +560,8 @@ test.describe("borrowing", () => {
         });
 
         const response = await borrowerPage.request.post(
-          `/communities/${community.slug}/loans/borrowing/${loan.id}/checkout`,
+          `/communities/${community.slug}/loans/${loan.id}`,
+          { form: { intent: "checkout" } },
         );
         expect(response.status()).toBe(403);
 
@@ -616,7 +620,8 @@ test.describe("borrowing", () => {
         });
 
         const response = await otherPage.request.post(
-          `/communities/${community.slug}/loans/borrowing/${loan.id}/checkout`,
+          `/communities/${community.slug}/loans/${loan.id}`,
+          { form: { intent: "checkout" } },
         );
         expect(response.status()).toBe(404);
 
@@ -726,7 +731,8 @@ test.describe("borrowing", () => {
       });
 
       const response = await borrowerPage.request.post(
-        `/communities/${community.slug}/loans/borrowing/${loan.id}/return`,
+        `/communities/${community.slug}/loans/${loan.id}`,
+        { form: { intent: "return" } },
       );
       expect(response.status()).toBe(403);
 
@@ -779,7 +785,8 @@ test.describe("borrowing", () => {
         });
 
         const response = await borrowerPage.request.post(
-          `/communities/${community.slug}/loans/borrowing/${loan.id}/return`,
+          `/communities/${community.slug}/loans/${loan.id}`,
+          { form: { intent: "return" } },
         );
         expect(response.status()).toBe(403);
 
@@ -839,7 +846,8 @@ test.describe("borrowing", () => {
         });
 
         const response = await otherPage.request.post(
-          `/communities/${community.slug}/loans/borrowing/${loan.id}/return`,
+          `/communities/${community.slug}/loans/${loan.id}`,
+          { form: { intent: "return" } },
         );
         expect(response.status()).toBe(404);
 
@@ -890,7 +898,8 @@ test.describe("borrowing", () => {
       });
 
       const response = await borrowerPage.request.post(
-        `/communities/${community.slug}/loans/borrowing/${loan.id}/cancel`,
+        `/communities/${community.slug}/loans/${loan.id}`,
+        { form: { intent: "cancel" } },
       );
       expect(response.status()).toBe(403);
 
@@ -948,7 +957,8 @@ test.describe("borrowing", () => {
         });
 
         const response = await otherPage.request.post(
-          `/communities/${community.slug}/loans/borrowing/${loan.id}/cancel`,
+          `/communities/${community.slug}/loans/${loan.id}`,
+          { form: { intent: "cancel" } },
         );
         expect(response.status()).toBe(404);
 
@@ -961,6 +971,47 @@ test.describe("borrowing", () => {
       expect(persisted.status).toBe("pending");
 
       await borrowerContext.close();
+    });
+
+    test("the owner cannot flag their own loan as returned", async ({
+      page,
+      withCommunityMember,
+    }) => {
+      const { community, user: owner } = await withCommunityMember();
+      const ownerMembership = await prisma.communityMembership.findFirstOrThrow(
+        {
+          where: { userId: owner.id, communityId: community.id },
+        },
+      );
+      const item = await ItemFactory.create({
+        community: { connect: { id: community.id } },
+        ownerMembership: { connect: { id: ownerMembership.id } },
+      });
+      const borrower = await UserFactory.create();
+      await CommunityMembershipFactory.create({
+        user: { connect: { id: borrower.id } },
+        community: { connect: { id: community.id } },
+      });
+      const loan = await LoanFactory.create({
+        item: { connect: { id: item.id } },
+        community: { connect: { id: community.id } },
+        borrower: { connect: { id: borrower.id } },
+        owner: { connect: { id: owner.id } },
+        status: "active",
+        checkedOutAt: new Date(),
+      });
+
+      const response = await page.request.post(
+        `/communities/${community.slug}/loans/${loan.id}`,
+        { form: { intent: "return" } },
+      );
+      expect(response.status()).toBe(403);
+
+      const persisted = await prisma.loan.findUniqueOrThrow({
+        where: { id: loan.id },
+      });
+      expect(persisted.status).toBe("active");
+      expect(persisted.borrowerConfirmedReturnAt).toBeNull();
     });
   });
 });

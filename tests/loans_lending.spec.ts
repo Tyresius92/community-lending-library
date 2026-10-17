@@ -554,7 +554,8 @@ test.describe("lending", () => {
       });
 
       const acceptResponse = await page.request.post(
-        `/communities/${community.slug}/loans/lending/${loanA.id}/accept`,
+        `/communities/${community.slug}/loans/${loanA.id}`,
+        { form: { intent: "accept" } },
       );
       expect(acceptResponse.status()).toBe(200);
 
@@ -602,7 +603,8 @@ test.describe("lending", () => {
       });
 
       const response = await page.request.post(
-        `/communities/${community.slug}/loans/lending/${loan.id}/accept`,
+        `/communities/${community.slug}/loans/${loan.id}`,
+        { form: { intent: "accept" } },
       );
       expect(response.status()).toBe(403);
 
@@ -689,7 +691,8 @@ test.describe("lending", () => {
         });
 
         const response = await page.request.post(
-          `/communities/${community.slug}/loans/lending/${loan.id}/checkout`,
+          `/communities/${community.slug}/loans/${loan.id}`,
+          { form: { intent: "checkout" } },
         );
         expect(response.status()).toBe(403);
 
@@ -823,7 +826,8 @@ test.describe("lending", () => {
         });
 
         const response = await page.request.post(
-          `/communities/${community.slug}/loans/lending/${loan.id}/confirm_return`,
+          `/communities/${community.slug}/loans/${loan.id}`,
+          { form: { intent: "confirm_return" } },
         );
         expect(response.status()).toBe(403);
 
@@ -863,7 +867,8 @@ test.describe("lending", () => {
       });
 
       const response = await page.request.post(
-        `/communities/${community.slug}/loans/lending/${loan.id}/cancel`,
+        `/communities/${community.slug}/loans/${loan.id}`,
+        { form: { intent: "cancel" } },
       );
       expect(response.status()).toBe(403);
 
@@ -932,7 +937,8 @@ test.describe("lending", () => {
           });
 
           const response = await otherPage.request.post(
-            `/communities/${community.slug}/loans/lending/${loan.id}/${action}`,
+            `/communities/${community.slug}/loans/${loan.id}`,
+            { form: { intent: action } },
           );
           expect(response.status()).toBe(404);
 
@@ -945,5 +951,50 @@ test.describe("lending", () => {
         expect(persisted.status).toBe(requiredStatusFor(action));
       });
     }
+
+    test("the borrower cannot accept their own pending loan request", async ({
+      browser,
+      withCommunityMember,
+    }) => {
+      const { community, user: owner } = await withCommunityMember();
+      const ownerMembership = await prisma.communityMembership.findFirstOrThrow(
+        {
+          where: { userId: owner.id, communityId: community.id },
+        },
+      );
+      const item = await ItemFactory.create({
+        community: { connect: { id: community.id } },
+        ownerMembership: { connect: { id: ownerMembership.id } },
+      });
+      const borrower = await UserFactory.create();
+      await CommunityMembershipFactory.create({
+        user: { connect: { id: borrower.id } },
+        community: { connect: { id: community.id } },
+      });
+      const loan = await LoanFactory.create({
+        item: { connect: { id: item.id } },
+        community: { connect: { id: community.id } },
+        borrower: { connect: { id: borrower.id } },
+        owner: { connect: { id: owner.id } },
+        status: "pending",
+      });
+
+      const borrowerContext = await browser.newContext();
+      const borrowerPage = await borrowerContext.newPage();
+      await loginAsNewUser(borrowerContext, borrower.email);
+
+      const response = await borrowerPage.request.post(
+        `/communities/${community.slug}/loans/${loan.id}`,
+        { form: { intent: "accept" } },
+      );
+      expect(response.status()).toBe(403);
+
+      await borrowerContext.close();
+
+      const persisted = await prisma.loan.findUniqueOrThrow({
+        where: { id: loan.id },
+      });
+      expect(persisted.status).toBe("pending");
+    });
   });
 });

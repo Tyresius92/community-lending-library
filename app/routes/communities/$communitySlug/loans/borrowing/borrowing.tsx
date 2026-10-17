@@ -122,8 +122,14 @@ export default function Borrowing({
                   {CHECKOUT_STATUSES.includes(loan.status) ? (
                     <Form
                       method="post"
-                      action={`/communities/${communitySlug}/loans/borrowing/${loan.id}/checkout`}
+                      action={`/communities/${communitySlug}/loans/${loan.id}`}
                     >
+                      <input type="hidden" name="intent" value="checkout" />
+                      <input
+                        type="hidden"
+                        name="redirectTo"
+                        value={`/communities/${communitySlug}/loans/borrowing`}
+                      />
                       <Button type="submit" variant="primary">
                         {t("buttons.checkout")}
                       </Button>
@@ -143,8 +149,14 @@ export default function Borrowing({
                   loan.borrowerConfirmedReturnAt === null ? (
                     <Form
                       method="post"
-                      action={`/communities/${communitySlug}/loans/borrowing/${loan.id}/return`}
+                      action={`/communities/${communitySlug}/loans/${loan.id}`}
                     >
+                      <input type="hidden" name="intent" value="return" />
+                      <input
+                        type="hidden"
+                        name="redirectTo"
+                        value={`/communities/${communitySlug}/loans/borrowing`}
+                      />
                       <Button type="submit" variant="primary">
                         {t("buttons.iReturnedIt")}
                       </Button>
@@ -182,8 +194,14 @@ export default function Borrowing({
             </Button>
             <Form
               method="post"
-              action={`/communities/${communitySlug}/loans/borrowing/${cancelLoanId}/cancel`}
+              action={`/communities/${communitySlug}/loans/${cancelLoanId}`}
             >
+              <input type="hidden" name="intent" value="cancel" />
+              <input
+                type="hidden"
+                name="redirectTo"
+                value={`/communities/${communitySlug}/loans/borrowing`}
+              />
               <Button type="submit" variant="danger">
                 {t("buttons.confirmCancel")}
               </Button>

@@ -70,42 +70,10 @@ export default [
             index(
               "routes/communities/$communitySlug/loans/borrowing/borrowing.tsx",
             ),
-            route(
-              ":loanId/cancel",
-              "routes/communities/$communitySlug/loans/borrowing/$loanId/cancel/cancel.tsx",
-            ),
-            route(
-              ":loanId/checkout",
-              "routes/communities/$communitySlug/loans/borrowing/$loanId/checkout/checkout.tsx",
-            ),
-            route(
-              ":loanId/return",
-              "routes/communities/$communitySlug/loans/borrowing/$loanId/return/return.tsx",
-            ),
           ]),
           ...prefix("lending", [
             index(
               "routes/communities/$communitySlug/loans/lending/lending.tsx",
-            ),
-            route(
-              ":loanId/accept",
-              "routes/communities/$communitySlug/loans/lending/$loanId/accept/accept.tsx",
-            ),
-            route(
-              ":loanId/decline",
-              "routes/communities/$communitySlug/loans/lending/$loanId/decline/decline.tsx",
-            ),
-            route(
-              ":loanId/cancel",
-              "routes/communities/$communitySlug/loans/lending/$loanId/cancel/cancel.tsx",
-            ),
-            route(
-              ":loanId/checkout",
-              "routes/communities/$communitySlug/loans/lending/$loanId/checkout/checkout.tsx",
-            ),
-            route(
-              ":loanId/confirm_return",
-              "routes/communities/$communitySlug/loans/lending/$loanId/confirm_return/confirm_return.tsx",
             ),
           ]),
           route(

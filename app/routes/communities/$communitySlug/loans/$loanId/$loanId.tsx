@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Form } from "react-router";
+import { Form, redirect } from "react-router";
 
 import { Button } from "~/components/button/button";
 import { Modal } from "~/components/modal/modal";
 import { prisma } from "~/db.server";
+import { emailT } from "~/emails/locale.server";
+import { ReturnFlaggedEmail } from "~/emails/return_flagged_email";
 import type { LoanStatus } from "~/generated/prisma/client";
+import { sendEmail } from "~/mailer.server";
 import { getUserId, loginRedirect } from "~/session.server";
+import { safeRedirect } from "~/utils";
 import { getCommunityMembership } from "~/utils/community_role.server";
 import { expireIfNeeded } from "~/utils/loan_expiry.server";
 
@@ -120,16 +124,142 @@ export const loader = async ({ params, request, url }: Route.LoaderArgs) => {
   };
 };
 
-export default function LoanDetail({
-  loaderData,
-  params,
-}: Route.ComponentProps) {
+export const action = async ({ params, request, url }: Route.ActionArgs) => {
+  const userId = await getUserId(request);
+  if (!userId) {
+    return loginRedirect(url);
+  }
+
+  const found = await getCommunityMembership(userId, params.communitySlug);
+  if (!found) {
+    throw new Response("Not Found", { status: 404 });
+  }
+
+  const formData = await request.formData();
+  const intent = formData.get("intent");
+  const redirectTo = safeRedirect(
+    formData.get("redirectTo"),
+    `/communities/${params.communitySlug}/loans/${params.loanId}`,
+  );
+
+  const rawLoan = await prisma.loan.findFirst({
+    where: {
+      id: params.loanId,
+      communityId: found.community.id,
+      OR: [{ ownerId: userId }, { borrowerId: userId }],
+    },
+    include: {
+      item: { select: { name: true } },
+      owner: { select: { email: true } },
+    },
+  });
+  if (!rawLoan) {
+    throw new Response("Not Found", { status: 404 });
+  }
+
+  const viewerRole: "owner" | "borrower" =
+    rawLoan.ownerId === userId ? "owner" : "borrower";
+  const loan = await expireIfNeeded(rawLoan);
+
+  switch (intent) {
+    case "accept": {
+      if (viewerRole !== "owner" || loan.status !== "pending") {
+        return new Response(null, { status: 403 });
+      }
+      await prisma.loan.update({
+        where: { id: loan.id },
+        data: { status: "accepted", acceptedAt: new Date() },
+      });
+      return redirect(redirectTo);
+    }
+    case "decline": {
+      if (viewerRole !== "owner" || loan.status !== "pending") {
+        return new Response(null, { status: 403 });
+      }
+      await prisma.loan.update({
+        where: { id: loan.id },
+        data: { status: "declined", declinedAt: new Date() },
+      });
+      return redirect(redirectTo);
+    }
+    case "cancel": {
+      const isCancellable =
+        viewerRole === "borrower"
+          ? loan.status === "pending" ||
+            (loan.status === "accepted" && loan.checkedOutAt === null)
+          : loan.status === "accepted" && loan.checkedOutAt === null;
+      if (!isCancellable) {
+        return new Response(null, { status: 403 });
+      }
+      await prisma.loan.update({
+        where: { id: loan.id },
+        data: {
+          status: "cancelled",
+          cancelledAt: new Date(),
+          cancelledByRole: viewerRole,
+        },
+      });
+      return redirect(redirectTo);
+    }
+    case "checkout": {
+      if (loan.status !== "accepted") {
+        return new Response(null, { status: 403 });
+      }
+      await prisma.loan.update({
+        where: { id: loan.id },
+        data: { status: "active", checkedOutAt: new Date() },
+      });
+      return redirect(redirectTo);
+    }
+    case "return": {
+      if (
+        viewerRole !== "borrower" ||
+        loan.status !== "active" ||
+        loan.borrowerConfirmedReturnAt !== null
+      ) {
+        return new Response(null, { status: 403 });
+      }
+      await prisma.loan.update({
+        where: { id: loan.id },
+        data: { borrowerConfirmedReturnAt: new Date() },
+      });
+      const loanUrl = new URL(
+        `/communities/${params.communitySlug}/loans/${loan.id}`,
+        url,
+      );
+      await sendEmail({
+        to: loan.owner.email,
+        subject: emailT("returnFlagged.subject", {
+          itemName: loan.item.name,
+        }),
+        react: (
+          <ReturnFlaggedEmail
+            itemName={loan.item.name}
+            loanUrl={loanUrl.toString()}
+          />
+        ),
+      });
+      return redirect(redirectTo);
+    }
+    case "confirm_return": {
+      if (viewerRole !== "owner" || loan.status !== "active") {
+        return new Response(null, { status: 403 });
+      }
+      await prisma.loan.update({
+        where: { id: loan.id },
+        data: { status: "completed", ownerConfirmedReturnAt: new Date() },
+      });
+      return redirect(redirectTo);
+    }
+    default:
+      throw new Response("Bad Request", { status: 400 });
+  }
+};
+
+export default function LoanDetail({ loaderData }: Route.ComponentProps) {
   const { t } = useTranslation("loans");
   const { loan, actions } = loaderData;
-  const { communitySlug } = params;
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-
-  const sidePrefix = loan.viewerRole === "owner" ? "lending" : "borrowing";
 
   return (
     <div>
@@ -148,30 +278,24 @@ export default function LoanDetail({
       </p>
 
       {actions.canAccept ? (
-        <Form
-          method="post"
-          action={`/communities/${communitySlug}/loans/lending/${loan.id}/accept`}
-        >
+        <Form method="post">
+          <input type="hidden" name="intent" value="accept" />
           <Button type="submit" variant="primary">
             {t("buttons.accept")}
           </Button>
         </Form>
       ) : null}
       {actions.canDecline ? (
-        <Form
-          method="post"
-          action={`/communities/${communitySlug}/loans/lending/${loan.id}/decline`}
-        >
+        <Form method="post">
+          <input type="hidden" name="intent" value="decline" />
           <Button type="submit" variant="secondary">
             {t("buttons.decline")}
           </Button>
         </Form>
       ) : null}
       {actions.canCheckout ? (
-        <Form
-          method="post"
-          action={`/communities/${communitySlug}/loans/${sidePrefix}/${loan.id}/checkout`}
-        >
+        <Form method="post">
+          <input type="hidden" name="intent" value="checkout" />
           <Button type="submit" variant="primary">
             {t("buttons.checkout")}
           </Button>
@@ -179,10 +303,8 @@ export default function LoanDetail({
       ) : null}
       {actions.canConfirmReturn ? (
         <>
-          <Form
-            method="post"
-            action={`/communities/${communitySlug}/loans/lending/${loan.id}/confirm_return`}
-          >
+          <Form method="post">
+            <input type="hidden" name="intent" value="confirm_return" />
             <Button type="submit" variant="primary">
               {t("buttons.confirmReturn")}
             </Button>
@@ -193,10 +315,8 @@ export default function LoanDetail({
         </>
       ) : null}
       {actions.canFlagReturn ? (
-        <Form
-          method="post"
-          action={`/communities/${communitySlug}/loans/borrowing/${loan.id}/return`}
-        >
+        <Form method="post">
+          <input type="hidden" name="intent" value="return" />
           <Button type="submit" variant="primary">
             {t("buttons.iReturnedIt")}
           </Button>
@@ -235,10 +355,8 @@ export default function LoanDetail({
             >
               {t("buttons.cancel")}
             </Button>
-            <Form
-              method="post"
-              action={`/communities/${communitySlug}/loans/${sidePrefix}/${loan.id}/cancel`}
-            >
+            <Form method="post">
+              <input type="hidden" name="intent" value="cancel" />
               <Button type="submit" variant="danger">
                 {t("buttons.confirmCancel")}
               </Button>

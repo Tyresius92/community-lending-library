@@ -121,16 +121,28 @@ export default function Lending({ loaderData, params }: Route.ComponentProps) {
                     <>
                       <Form
                         method="post"
-                        action={`/communities/${communitySlug}/loans/lending/${loan.id}/accept`}
+                        action={`/communities/${communitySlug}/loans/${loan.id}`}
                       >
+                        <input type="hidden" name="intent" value="accept" />
+                        <input
+                          type="hidden"
+                          name="redirectTo"
+                          value={`/communities/${communitySlug}/loans/lending`}
+                        />
                         <Button type="submit" variant="primary">
                           {t("buttons.accept")}
                         </Button>
                       </Form>
                       <Form
                         method="post"
-                        action={`/communities/${communitySlug}/loans/lending/${loan.id}/decline`}
+                        action={`/communities/${communitySlug}/loans/${loan.id}`}
                       >
+                        <input type="hidden" name="intent" value="decline" />
+                        <input
+                          type="hidden"
+                          name="redirectTo"
+                          value={`/communities/${communitySlug}/loans/lending`}
+                        />
                         <Button type="submit" variant="secondary">
                           {t("buttons.decline")}
                         </Button>
@@ -140,8 +152,14 @@ export default function Lending({ loaderData, params }: Route.ComponentProps) {
                   {CHECKOUT_STATUSES.includes(loan.status) ? (
                     <Form
                       method="post"
-                      action={`/communities/${communitySlug}/loans/lending/${loan.id}/checkout`}
+                      action={`/communities/${communitySlug}/loans/${loan.id}`}
                     >
+                      <input type="hidden" name="intent" value="checkout" />
+                      <input
+                        type="hidden"
+                        name="redirectTo"
+                        value={`/communities/${communitySlug}/loans/lending`}
+                      />
                       <Button type="submit" variant="primary">
                         {t("buttons.checkout")}
                       </Button>
@@ -161,8 +179,18 @@ export default function Lending({ loaderData, params }: Route.ComponentProps) {
                     <>
                       <Form
                         method="post"
-                        action={`/communities/${communitySlug}/loans/lending/${loan.id}/confirm_return`}
+                        action={`/communities/${communitySlug}/loans/${loan.id}`}
                       >
+                        <input
+                          type="hidden"
+                          name="intent"
+                          value="confirm_return"
+                        />
+                        <input
+                          type="hidden"
+                          name="redirectTo"
+                          value={`/communities/${communitySlug}/loans/lending`}
+                        />
                         <Button type="submit" variant="primary">
                           {t("buttons.confirmReturn")}
                         </Button>
@@ -200,8 +228,14 @@ export default function Lending({ loaderData, params }: Route.ComponentProps) {
             </Button>
             <Form
               method="post"
-              action={`/communities/${communitySlug}/loans/lending/${cancelLoanId}/cancel`}
+              action={`/communities/${communitySlug}/loans/${cancelLoanId}`}
             >
+              <input type="hidden" name="intent" value="cancel" />
+              <input
+                type="hidden"
+                name="redirectTo"
+                value={`/communities/${communitySlug}/loans/lending`}
+              />
               <Button type="submit" variant="danger">
                 {t("buttons.confirmCancel")}
               </Button>
