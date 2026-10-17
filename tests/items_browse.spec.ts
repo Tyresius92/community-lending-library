@@ -56,6 +56,49 @@ test.describe("browse items", () => {
     await expect(page.getByText(otherMembership.displayName)).toHaveCount(0);
   });
 
+  test("the 'My items' filter shows only the viewer's own items", async ({
+    browser,
+    page,
+    withCommunityMember,
+  }) => {
+    const { community, user: viewer } = await withCommunityMember();
+
+    const viewerMembership = await prisma.communityMembership.findFirstOrThrow({
+      where: { userId: viewer.id, communityId: community.id },
+    });
+    await ItemFactory.create({
+      name: "Camping Tent",
+      community: { connect: { id: community.id } },
+      ownerMembership: { connect: { id: viewerMembership.id } },
+    });
+
+    const otherContext = await browser.newContext();
+    const otherUser = await loginAsNewUser(
+      otherContext,
+      `other-${faker.string.uuid()}@example.com`,
+    );
+    const otherMembership = await CommunityMembershipFactory.create({
+      user: { connect: { id: otherUser.id } },
+      community: { connect: { id: community.id } },
+    });
+    await ItemFactory.create({
+      name: "Cordless Drill",
+      community: { connect: { id: community.id } },
+      ownerMembership: { connect: { id: otherMembership.id } },
+    });
+    await otherContext.close();
+
+    await page.goto(`/communities/${community.slug}/items?mine=true`);
+    await expectNoAxeViolations(page);
+
+    await expect(
+      page.getByRole("link", { name: "Camping Tent" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Cordless Drill" }),
+    ).toBeHidden();
+  });
+
   test("a non-member cannot browse a private community's items", async ({
     browser,
     withCommunityMember,
@@ -77,7 +120,7 @@ test.describe("browse items", () => {
     await otherContext.close();
   });
 
-  test("a logged-in non-member can browse a public community's items", async ({
+  test("a logged-in non-member cannot browse a public community's items", async ({
     browser,
   }) => {
     const ownerContext = await browser.newContext();
@@ -108,10 +151,10 @@ test.describe("browse items", () => {
       `visitor-${faker.string.uuid()}@example.com`,
     );
 
-    await outsiderPage.goto(`/communities/${community.slug}/items`);
-    await expect(
-      outsiderPage.getByRole("cell", { name: "a neighbor" }),
-    ).toBeVisible();
+    const response = await outsiderPage.goto(
+      `/communities/${community.slug}/items`,
+    );
+    expect(response?.status()).toBe(404);
 
     await outsiderContext.close();
   });

@@ -61,7 +61,7 @@ export default function CommunityLayout({ loaderData }: Route.ComponentProps) {
               <Link to={`/communities/${slug}/items`}>{t("nav.items")}</Link>
             </li>
             <li>
-              <Link to={`/communities/${slug}/my_items`}>
+              <Link to={`/communities/${slug}/items?mine=true`}>
                 {t("nav.myItems")}
               </Link>
             </li>

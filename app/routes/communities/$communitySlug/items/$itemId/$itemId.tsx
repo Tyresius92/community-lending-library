@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Form, redirect } from "react-router";
 
 import { Button } from "~/components/button/button";
+import { Link } from "~/components/link/link";
+import { Modal } from "~/components/modal/modal";
 import { prisma } from "~/db.server";
 import type { LoanStatus } from "~/generated/prisma/client";
 import { getUserId, loginRedirect } from "~/session.server";
@@ -47,25 +50,15 @@ export const loader = async ({ params, request, url }: Route.LoaderArgs) => {
     return loginRedirect(url);
   }
 
-  const community = await prisma.community.findFirst({
-    where: { slug: params.communitySlug, archivedAt: null },
-    select: { id: true, visibility: true },
-  });
-  if (!community) {
-    throw new Response("Not Found", { status: 404 });
-  }
-
-  const membership = await prisma.communityMembership.findUnique({
-    where: { userId_communityId: { userId, communityId: community.id } },
-  });
-  if (!membership && community.visibility === "private") {
+  const found = await getCommunityMembership(userId, params.communitySlug);
+  if (!found) {
     throw new Response("Not Found", { status: 404 });
   }
 
   const item = await prisma.item.findFirst({
     where: {
       id: params.itemId,
-      communityId: community.id,
+      communityId: found.community.id,
       ownerMembership: { removedAt: null },
     },
     select: {
@@ -80,21 +73,22 @@ export const loader = async ({ params, request, url }: Route.LoaderArgs) => {
     throw new Response("Not Found", { status: 404 });
   }
 
-  const isOwnItem = membership
-    ? item.ownerMembershipId === membership.id
-    : false;
+  const isOwnItem = item.ownerMembershipId === found.membership.id;
 
-  let loanStatus: LiveLoanStatus | null = null;
-  let ownerDisplayName: string | null = null;
-  let canRequest = false;
-
-  if (!isOwnItem) {
-    loanStatus = await getViewerLoanStatus(item.id, userId);
-    const isRevealed = loanStatus === "accepted" || loanStatus === "active";
-    ownerDisplayName = isRevealed ? item.ownerMembership.displayName : null;
-    canRequest =
-      Boolean(membership) && !membership?.removedAt && loanStatus === null;
+  if (isOwnItem) {
+    return {
+      item: { id: item.id, name: item.name, description: item.description },
+      isOwnItem,
+      ownerDisplayName: null,
+      loanStatus: null,
+      canRequest: false,
+    };
   }
+
+  const loanStatus = await getViewerLoanStatus(item.id, userId);
+  const isRevealed = loanStatus === "accepted" || loanStatus === "active";
+  const ownerDisplayName = isRevealed ? item.ownerMembership.displayName : null;
+  const canRequest = loanStatus === null;
 
   return {
     item: { id: item.id, name: item.name, description: item.description },
@@ -116,6 +110,9 @@ export const action = async ({ params, request, url }: Route.ActionArgs) => {
     throw new Response("Not Found", { status: 404 });
   }
 
+  const formData = await request.formData();
+  const intent = formData.get("intent");
+
   const item = await prisma.item.findFirst({
     where: {
       id: params.itemId,
@@ -132,34 +129,56 @@ export const action = async ({ params, request, url }: Route.ActionArgs) => {
     throw new Response("Not Found", { status: 404 });
   }
 
-  if (item.ownerMembershipId === found.membership.id) {
-    return new Response(null, { status: 403 });
+  const isOwnItem = item.ownerMembershipId === found.membership.id;
+
+  switch (intent) {
+    case "askToBorrow": {
+      if (isOwnItem) {
+        return new Response(null, { status: 403 });
+      }
+
+      const existingStatus = await getViewerLoanStatus(item.id, userId);
+      if (existingStatus !== null) {
+        return new Response(null, { status: 403 });
+      }
+
+      await prisma.loan.create({
+        data: {
+          item: { connect: { id: item.id } },
+          community: { connect: { id: found.community.id } },
+          borrower: { connect: { id: userId } },
+          owner: { connect: { id: item.ownerMembership.userId } },
+          expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        },
+      });
+
+      return redirect(
+        `/communities/${params.communitySlug}/items/${params.itemId}`,
+      );
+    }
+    case "delete": {
+      if (!isOwnItem) {
+        return new Response(null, { status: 403 });
+      }
+
+      await prisma.item.delete({ where: { id: item.id } });
+
+      return redirect(`/communities/${params.communitySlug}/items`);
+    }
+    default:
+      throw new Response("Bad Request", { status: 400 });
   }
-
-  const existingStatus = await getViewerLoanStatus(item.id, userId);
-  if (existingStatus !== null) {
-    return new Response(null, { status: 403 });
-  }
-
-  await prisma.loan.create({
-    data: {
-      item: { connect: { id: item.id } },
-      community: { connect: { id: found.community.id } },
-      borrower: { connect: { id: userId } },
-      owner: { connect: { id: item.ownerMembership.userId } },
-      expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-    },
-  });
-
-  return redirect(
-    `/communities/${params.communitySlug}/items/${params.itemId}`,
-  );
 };
 
-export default function ItemDetail({ loaderData }: Route.ComponentProps) {
+export default function ItemDetail({
+  loaderData,
+  params,
+}: Route.ComponentProps) {
   const { t } = useTranslation("items");
   const { item, isOwnItem, ownerDisplayName, loanStatus, canRequest } =
     loaderData;
+  const { communitySlug } = params;
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const ownerLabel = isOwnItem
     ? t("labels.you")
@@ -172,18 +191,62 @@ export default function ItemDetail({ loaderData }: Route.ComponentProps) {
       <p>
         {t("labels.owner")}: {ownerLabel}
       </p>
-      {!isOwnItem && canRequest ? (
-        <Form method="post">
-          <Button type="submit">{t("buttons.askToBorrow")}</Button>
-        </Form>
-      ) : null}
-      {!isOwnItem && !canRequest && loanStatus !== null ? (
-        <p>
-          {loanStatus === "pending" && t("notices.requestPending")}
-          {loanStatus === "accepted" && t("notices.requestAccepted")}
-          {loanStatus === "active" && t("notices.currentlyBorrowing")}
-        </p>
-      ) : null}
+      {isOwnItem ? (
+        <>
+          <Link to={`/communities/${communitySlug}/items/${item.id}/edit`}>
+            {t("buttons.edit")}
+          </Link>
+          <Button
+            variant="danger"
+            onClick={() => {
+              setIsDeleteModalOpen(true);
+            }}
+          >
+            {t("buttons.delete")}
+          </Button>
+          <Modal
+            isOpen={isDeleteModalOpen}
+            setIsOpen={setIsDeleteModalOpen}
+            title={t("notices.confirmDeleteTitle")}
+            closeLabel={t("buttons.close")}
+            content={
+              <>
+                <p>{t("notices.confirmDeleteBody")}</p>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setIsDeleteModalOpen(false);
+                  }}
+                >
+                  {t("buttons.cancel")}
+                </Button>
+                <Form method="post">
+                  <input type="hidden" name="intent" value="delete" />
+                  <Button type="submit" variant="danger">
+                    {t("buttons.confirmDelete")}
+                  </Button>
+                </Form>
+              </>
+            }
+          />
+        </>
+      ) : (
+        <>
+          {canRequest ? (
+            <Form method="post">
+              <input type="hidden" name="intent" value="askToBorrow" />
+              <Button type="submit">{t("buttons.askToBorrow")}</Button>
+            </Form>
+          ) : null}
+          {!canRequest && loanStatus !== null ? (
+            <p>
+              {loanStatus === "pending" && t("notices.requestPending")}
+              {loanStatus === "accepted" && t("notices.requestAccepted")}
+              {loanStatus === "active" && t("notices.currentlyBorrowing")}
+            </p>
+          ) : null}
+        </>
+      )}
     </div>
   );
 }

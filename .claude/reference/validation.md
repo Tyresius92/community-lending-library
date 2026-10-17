@@ -109,7 +109,7 @@ export async function example(formData: FormData, t: (key: string) => string) {
 
 On success, `result.data` is the fully-typed, already-trimmed output — use it directly, no manual `.trim()` or `tiny-invariant` narrowing needed.
 
-This `fieldMessage` closure is **per-route, not shared**, even when two routes validate the same model (`my_items/new` and `my_items/$itemId/edit` each build their own `messages` map and closure). A field with only one possible code doesn't need a map at all — write the `t()` call inline (see the community join action in `app/routes/communities/$communitySlug/$communitySlug.tsx`).
+This `fieldMessage` closure is **per-route, not shared**, even when two routes validate the same model (`items/new` and `items/$itemId/edit` each build their own `messages` map and closure). A field with only one possible code doesn't need a map at all — write the `t()` call inline (see the community join action in `app/routes/communities/$communitySlug/$communitySlug.tsx`).
 
 New i18n keys referenced by a `messages` map go under the route's existing namespace file's `errors` group (`app/locales/en/<namespace>.json`), alongside `labels`/`buttons`/`nav`/`meta` — never a new per-screen nesting. See [i18n.md](i18n.md) for the full convention.
 

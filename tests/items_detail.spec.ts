@@ -85,6 +85,7 @@ test.describe("item detail", () => {
 
     const response = await page.request.post(
       `/communities/${community.slug}/items/${item.id}`,
+      { form: { intent: "askToBorrow" } },
     );
     expect(response.status()).toBe(403);
   });
@@ -299,6 +300,7 @@ test.describe("item detail", () => {
 
     const response = await borrowerPage.request.post(
       `/communities/${community.slug}/items/${item.id}`,
+      { form: { intent: "askToBorrow" } },
     );
     expect(response.status()).toBe(403);
 
@@ -398,7 +400,7 @@ test.describe("item detail", () => {
     await outsiderContext.close();
   });
 
-  test("a logged-in non-member can view a public community's item but cannot ask to borrow", async ({
+  test("a logged-in non-member cannot view a public community's item detail", async ({
     browser,
   }) => {
     const ownerContext = await browser.newContext();
@@ -429,19 +431,16 @@ test.describe("item detail", () => {
       `visitor-${faker.string.uuid()}@example.com`,
     );
 
-    await outsiderPage.goto(`/communities/${community.slug}/items/${item.id}`);
-    await expect(
-      outsiderPage.getByRole("heading", { name: "Wheelbarrow" }),
-    ).toBeVisible();
-    await expect(outsiderPage.getByText("a neighbor")).toBeVisible();
-    await expect(
-      outsiderPage.getByRole("button", { name: "Ask to borrow" }),
-    ).toBeHidden();
-
-    const response = await outsiderPage.request.post(
+    const response = await outsiderPage.goto(
       `/communities/${community.slug}/items/${item.id}`,
     );
-    expect(response.status()).toBe(404);
+    expect(response?.status()).toBe(404);
+
+    const postResponse = await outsiderPage.request.post(
+      `/communities/${community.slug}/items/${item.id}`,
+      { form: { intent: "askToBorrow" } },
+    );
+    expect(postResponse.status()).toBe(404);
 
     await outsiderContext.close();
   });

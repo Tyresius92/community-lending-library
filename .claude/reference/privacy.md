@@ -1,8 +1,8 @@
 # Owner-identity privacy rule
 
-Enforced in loaders/actions, not just hidden client-side: item owner identity is never shown to a browsing member — a neutral placeholder ("a neighbor") renders instead, until that viewer's own loan request on the item is accepted. `my_items` is exempt (always your own items). The Members list must never show or allow inferring item ownership. See [ADR-004](../../docs/adr/ADR-004-owner-identity-privacy-rule.md) for why.
+Enforced in loaders/actions, not just hidden client-side: item owner identity is never shown to a browsing member — a neutral placeholder ("a neighbor") renders instead, until that viewer's own loan request on the item is accepted. The merged `items/$itemId.tsx` route's own-item branch (`isOwnItem`) is exempt, since that's always the viewer's own item. The Members list must never show or allow inferring item ownership. See [ADR-004](../../docs/adr/ADR-004-owner-identity-privacy-rule.md) for why.
 
-This cuts across [routing.md](routing.md) (Browse Items, Item Detail, Members), `my_items`, and My Loans — check this rule whenever a change touches any screen that renders another member's identity or their items.
+This cuts across [routing.md](routing.md) (`items` list/detail, Members), and My Loans — check this rule whenever a change touches any screen that renders another member's identity or their items.
 
 ## Standing questions
 

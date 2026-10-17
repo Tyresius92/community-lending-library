@@ -22,28 +22,14 @@ export default [
         index("routes/communities/$communitySlug/$communitySlug.tsx"),
         ...prefix("items", [
           index("routes/communities/$communitySlug/items/items.tsx"),
+          route("new", "routes/communities/$communitySlug/items/new/new.tsx"),
           route(
             ":itemId",
             "routes/communities/$communitySlug/items/$itemId/$itemId.tsx",
           ),
-        ]),
-        ...prefix("my_items", [
-          index("routes/communities/$communitySlug/my_items/my_items.tsx"),
-          route(
-            "new",
-            "routes/communities/$communitySlug/my_items/new/new.tsx",
-          ),
-          route(
-            ":itemId",
-            "routes/communities/$communitySlug/my_items/$itemId/$itemId.tsx",
-          ),
           route(
             ":itemId/edit",
-            "routes/communities/$communitySlug/my_items/$itemId/edit/edit.tsx",
-          ),
-          route(
-            ":itemId/delete",
-            "routes/communities/$communitySlug/my_items/$itemId/delete/delete.tsx",
+            "routes/communities/$communitySlug/items/$itemId/edit/edit.tsx",
           ),
         ]),
         ...prefix("members", [

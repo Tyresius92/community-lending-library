@@ -15,7 +15,7 @@ test.describe("item management", () => {
   }) => {
     const { community } = await withCommunityMember();
 
-    await page.goto(`/communities/${community.slug}/my_items/new`);
+    await page.goto(`/communities/${community.slug}/items/new`);
     await expectNoAxeViolations(page);
 
     await page.getByLabel("Name", { exact: true }).fill("Cordless Drill");
@@ -23,7 +23,7 @@ test.describe("item management", () => {
     await page.getByRole("button", { name: "Create item" }).click();
 
     await expect(page).toHaveURL(
-      new RegExp(`/communities/${community.slug}/my_items/[^/]+$`),
+      new RegExp(`/communities/${community.slug}/items/[^/]+$`),
     );
     await expect(
       page.getByRole("heading", { name: "Cordless Drill" }),
@@ -39,7 +39,7 @@ test.describe("item management", () => {
       page.getByRole("heading", { name: "Cordless Drill 2" }),
     ).toBeVisible();
 
-    await page.goto(`/communities/${community.slug}/my_items`);
+    await page.goto(`/communities/${community.slug}/items?mine=true`);
     await expect(
       page.getByRole("link", { name: "Cordless Drill 2" }),
     ).toBeVisible();
@@ -53,12 +53,12 @@ test.describe("item management", () => {
 
     await dialog.getByRole("button", { name: "Delete" }).click();
 
-    await expect(page).toHaveURL(`/communities/${community.slug}/my_items`);
+    await expect(page).toHaveURL(`/communities/${community.slug}/items`);
     await expect(
       page.getByRole("link", { name: "Cordless Drill 2" }),
     ).toBeHidden();
 
-    await page.goto(`/communities/${community.slug}/items`);
+    await page.goto(`/communities/${community.slug}/items?mine=true`);
     await expect(
       page.getByRole("link", { name: "Cordless Drill 2" }),
     ).toBeHidden();
@@ -70,11 +70,11 @@ test.describe("item management", () => {
   }) => {
     const { community } = await withCommunityMember();
 
-    await page.goto(`/communities/${community.slug}/my_items/new`);
+    await page.goto(`/communities/${community.slug}/items/new`);
     await page.getByRole("button", { name: "Create item" }).click();
 
     await expect(page.getByRole("alert")).toHaveText("Name is required");
-    await expect(page).toHaveURL(`/communities/${community.slug}/my_items/new`);
+    await expect(page).toHaveURL(`/communities/${community.slug}/items/new`);
   });
 
   test("rejects an over-length name server-side even if the client maxLength is bypassed", async ({
@@ -84,7 +84,7 @@ test.describe("item management", () => {
     const { community } = await withCommunityMember();
 
     const response = await page.request.post(
-      `/communities/${community.slug}/my_items/new`,
+      `/communities/${community.slug}/items/new`,
       { form: { name: "a".repeat(101), description: "" } },
     );
 
@@ -101,7 +101,7 @@ test.describe("item management", () => {
     const { community } = await withCommunityMember();
 
     const response = await page.request.post(
-      `/communities/${community.slug}/my_items/new`,
+      `/communities/${community.slug}/items/new`,
       { form: { name: "Valid Name", description: "a".repeat(1001) } },
     );
 
@@ -111,7 +111,7 @@ test.describe("item management", () => {
     );
   });
 
-  test("a non-owner, including an admin or owner, cannot view, edit, or delete another member's item", async ({
+  test("a non-owner can view but not edit or delete another member's item", async ({
     browser,
     withCommunityMember,
   }) => {
@@ -140,21 +140,27 @@ test.describe("item management", () => {
       });
 
       const detailResponse = await otherPage.goto(
-        `/communities/${community.slug}/my_items/${item.id}`,
+        `/communities/${community.slug}/items/${item.id}`,
       );
-      expect(detailResponse?.status()).toBe(404);
+      expect(detailResponse?.status()).toBe(200);
 
       const editResponse = await otherPage.goto(
-        `/communities/${community.slug}/my_items/${item.id}/edit`,
+        `/communities/${community.slug}/items/${item.id}/edit`,
       );
       expect(editResponse?.status()).toBe(404);
 
       const deleteResponse = await otherPage.request.post(
-        `/communities/${community.slug}/my_items/${item.id}/delete`,
+        `/communities/${community.slug}/items/${item.id}`,
+        { form: { intent: "delete" } },
       );
-      expect(deleteResponse.status()).toBe(404);
+      expect(deleteResponse.status()).toBe(403);
 
       await otherContext.close();
     }
+
+    const persisted = await prisma.item.findUniqueOrThrow({
+      where: { id: item.id },
+    });
+    expect(persisted.id).toBe(item.id);
   });
 });

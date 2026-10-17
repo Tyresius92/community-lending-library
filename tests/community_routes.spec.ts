@@ -10,12 +10,12 @@ test.describe("community-scoped route scaffolding", () => {
     await expect(page.getByRole("heading", { name: "Items" })).toBeVisible();
   });
 
-  test("my_items/new route resolves", async ({ page, withCommunityMember }) => {
+  test("items/new route resolves", async ({ page, withCommunityMember }) => {
     const { community } = await withCommunityMember();
 
-    await page.goto(`/communities/${community.slug}/my_items/new`);
+    await page.goto(`/communities/${community.slug}/items/new`);
 
-    await expect(page).toHaveURL(`/communities/${community.slug}/my_items/new`);
+    await expect(page).toHaveURL(`/communities/${community.slug}/items/new`);
     await expect(page.getByRole("heading", { name: "New item" })).toBeVisible();
   });
 

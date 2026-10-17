@@ -2,17 +2,17 @@
   "meta": {
     "items": "Items",
     "newItem": "New item",
-    "editItem": "Edit item",
-    "myItems": "My items"
+    "editItem": "Edit item"
   },
   "headings": {
     "items": "Items",
     "newItem": "New item",
-    "editItem": "Edit item",
-    "myItems": "My items"
+    "editItem": "Edit item"
   },
   "nav": {
-    "newItem": "+ New item"
+    "newItem": "+ New item",
+    "allItems": "All items",
+    "myItems": "My items"
   },
   "labels": {
     "name": "Name",

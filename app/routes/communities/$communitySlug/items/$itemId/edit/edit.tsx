@@ -9,7 +9,7 @@ import { prisma } from "~/db.server";
 import { getInstance, getLocale } from "~/i18n/middleware.server";
 import {
   isItemErrorCode,
-  itemCreateSchema,
+  itemEditSchema,
   type ItemErrorCode,
   DESCRIPTION_MAX_LENGTH,
   NAME_MAX_LENGTH,
@@ -17,7 +17,7 @@ import {
 import { getUserId, loginRedirect } from "~/session.server";
 import { getCommunityMembership } from "~/utils/community_role.server";
 
-import type { Route } from "./+types/new";
+import type { Route } from "./+types/edit";
 
 export const meta: Route.MetaFunction = ({ loaderData }) => [
   { title: loaderData.title },
@@ -39,8 +39,20 @@ export const loader = async ({
     throw new Response("Not Found", { status: 404 });
   }
 
+  const item = await prisma.item.findFirst({
+    where: {
+      id: params.itemId,
+      communityId: found.community.id,
+      ownerMembershipId: found.membership.id,
+    },
+    select: { id: true, name: true, description: true },
+  });
+  if (!item) {
+    throw new Response("Not Found", { status: 404 });
+  }
+
   const t = getInstance(context).getFixedT(getLocale(context), "items");
-  return { title: t("meta.newItem") };
+  return { title: t("headings.editItem"), item };
 };
 
 export const action = async ({
@@ -59,10 +71,21 @@ export const action = async ({
     throw new Response("Not Found", { status: 404 });
   }
 
+  const item = await prisma.item.findFirst({
+    where: {
+      id: params.itemId,
+      communityId: found.community.id,
+      ownerMembershipId: found.membership.id,
+    },
+  });
+  if (!item) {
+    throw new Response("Not Found", { status: 404 });
+  }
+
   const t = getInstance(context).getFixedT(getLocale(context), "items");
   const formData = await request.formData();
 
-  const result = itemCreateSchema.safeParse(Object.fromEntries(formData));
+  const result = itemEditSchema.safeParse(Object.fromEntries(formData));
   if (!result.success) {
     const messages: Record<ItemErrorCode, string> = {
       NAME_REQUIRED: t("errors.nameRequired"),
@@ -92,19 +115,21 @@ export const action = async ({
 
   const { name, description } = result.data;
 
-  const item = await prisma.item.create({
+  await prisma.item.update({
+    where: { id: item.id },
     data: {
       name,
       description: description.length > 0 ? description : null,
-      community: { connect: { id: found.community.id } },
-      ownerMembership: { connect: { id: found.membership.id } },
     },
   });
 
-  return redirect(`/communities/${params.communitySlug}/my_items/${item.id}`);
+  return redirect(`/communities/${params.communitySlug}/items/${item.id}`);
 };
 
-export default function NewItem({ actionData }: Route.ComponentProps) {
+export default function EditItem({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
   const nameRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
@@ -117,10 +142,11 @@ export default function NewItem({ actionData }: Route.ComponentProps) {
   }, [actionData]);
 
   const { t } = useTranslation("items");
+  const { item } = loaderData;
 
   return (
     <div>
-      <h1>{t("headings.newItem")}</h1>
+      <h1>{t("headings.editItem")}</h1>
       <Form method="post">
         <TextInput
           ref={nameRef}
@@ -128,6 +154,7 @@ export default function NewItem({ actionData }: Route.ComponentProps) {
           name="name"
           type="text"
           maxLength={NAME_MAX_LENGTH}
+          defaultValue={item.name}
           errorMessage={actionData?.errors.name}
         />
         <TextArea
@@ -136,9 +163,10 @@ export default function NewItem({ actionData }: Route.ComponentProps) {
           name="description"
           rows={4}
           maxLength={DESCRIPTION_MAX_LENGTH}
+          defaultValue={item.description ?? undefined}
           errorMessage={actionData?.errors.description}
         />
-        <Button type="submit">{t("buttons.createItem")}</Button>
+        <Button type="submit">{t("buttons.saveChanges")}</Button>
       </Form>
     </div>
   );

@@ -62,11 +62,13 @@ See the live version in [app/routes.ts](../../app/routes.ts) and `app/routes/com
 
 ## Community IA
 
-Community-scoped screens (`items`, `my_items`, `members`, `loans`) nest under `/communities/:communitySlug` as siblings. `/communities` one level up is the only place "my communities" (join/leave/switch) lives. Items are modeled as fully separate listings per community. `Message` isn't wired up yet.
+Community-scoped screens (`items`, `members`, `loans`) nest under `/communities/:communitySlug` as siblings. `/communities` one level up is the only place "my communities" (join/leave/switch) lives. `Message` isn't wired up yet.
 
-## `my_items`
+## `items`
 
-`app/routes/communities/$communitySlug/my_items/`: owner-scoped item management (list, create, view, edit, delete) — strictly owner-only, no admin override yet. Each item-scoped route independently checks ownership, collapsing "doesn't exist," "wrong community," and "not yours" into a single 404 rather than sharing a helper — see [ADR-002](../../docs/adr/ADR-002-direct-prisma-access-over-model-layer.md) for why. Delete is an action-only resource route (no loader, no component), invoked from a confirmation `Modal`.
+`app/routes/communities/$communitySlug/items/`: one role-aware resource, not a split between a public-browse tree and an owner-manage tree. `items.tsx` is the single list route for both "all items" and "my items" — a `?mine=true` search param toggles the `where` clause, not a separate route. `$itemId/$itemId.tsx` is the single detail route, branching its rendering on `isOwnItem`: the owner sees edit/delete controls, everyone else sees the ADR-004 redaction + request-to-borrow flow. `new/new.tsx` (create) and `$itemId/edit/edit.tsx` (edit) stay their own pages — each needs its own form and isn't a case of "the same page rendering two ways." See [ADR-007](../../docs/adr/ADR-007-colocated-multi-intent-actions-over-resource-routes.md) for why delete and ask-to-borrow are colocated on `$itemId.tsx`'s own action (via a hidden `intent` field) rather than given their own routes.
+
+Viewing the merged list/detail requires full community membership unconditionally (`getCommunityMembership`) — a non-member of even a _public_ community can no longer browse its items, a deliberate tightening made when the two routes merged (the old owner-management tree already required full membership; the old public-browse tree didn't).
 
 ## Standing questions
 
@@ -74,3 +76,4 @@ Community-scoped screens (`items`, `my_items`, `members`, `loans`) nest under `/
 - Does a new dynamic segment (like `:loanId`) belong as a single shared route, or does it need to be split per role/context (e.g. lending vs. borrowing)?
 - Does this need a `.layout.tsx` (real shared UI), or does `prefix()` cover it (just a shared URL prefix, no shared markup)?
 - Should this nest under an existing community-scoped section, or does it need its own top-level section?
+- Does a mutation belong on an existing page's action via an `intent` branch, or does it genuinely need its own URL? (See [ADR-007](../../docs/adr/ADR-007-colocated-multi-intent-actions-over-resource-routes.md).)
