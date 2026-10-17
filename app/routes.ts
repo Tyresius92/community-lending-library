@@ -48,14 +48,6 @@ export default [
         ]),
         ...prefix("members", [
           index("routes/communities/$communitySlug/members/members.tsx"),
-          route(
-            ":membershipId/role",
-            "routes/communities/$communitySlug/members/$membershipId/role/role.tsx",
-          ),
-          route(
-            ":membershipId/kick",
-            "routes/communities/$communitySlug/members/$membershipId/kick/kick.tsx",
-          ),
         ]),
         ...prefix("invite", [
           index("routes/communities/$communitySlug/invite/invite.tsx"),

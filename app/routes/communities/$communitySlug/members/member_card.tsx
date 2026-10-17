@@ -18,15 +18,10 @@ export interface Member {
 
 export interface MemberCardProps {
   member: Member;
-  communitySlug: string;
   canManage: boolean;
 }
 
-export const MemberCard = ({
-  member,
-  communitySlug,
-  canManage,
-}: MemberCardProps) => {
+export const MemberCard = ({ member, canManage }: MemberCardProps) => {
   const { t } = useTranslation("members");
   const nameId = useId();
   const [isKickModalOpen, setIsKickModalOpen] = useState(false);
@@ -52,10 +47,9 @@ export const MemberCard = ({
       <p>{t("labels.lendCount", { count: member.lendCount })}</p>
       {canManageMember ? (
         <>
-          <Form
-            method="post"
-            action={`/communities/${communitySlug}/members/${member.id}/role`}
-          >
+          <Form method="post">
+            <input type="hidden" name="membershipId" value={member.id} />
+            <input type="hidden" name="intent" value="changeRole" />
             <input
               type="hidden"
               name="role"
@@ -94,10 +88,9 @@ export const MemberCard = ({
                 >
                   {t("buttons.cancel")}
                 </Button>
-                <Form
-                  method="post"
-                  action={`/communities/${communitySlug}/members/${member.id}/kick`}
-                >
+                <Form method="post">
+                  <input type="hidden" name="membershipId" value={member.id} />
+                  <input type="hidden" name="intent" value="kick" />
                   <Button type="submit" variant="danger">
                     {t("buttons.confirmRemove")}
                   </Button>

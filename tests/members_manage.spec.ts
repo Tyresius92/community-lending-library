@@ -95,13 +95,20 @@ test.describe("members management", () => {
     const memberPage = await memberContext.newPage();
 
     const roleResponse = await memberPage.request.post(
-      `/communities/${community.slug}/members/${targetMembership.id}/role`,
-      { form: { role: "admin" } },
+      `/communities/${community.slug}/members`,
+      {
+        form: {
+          membershipId: targetMembership.id,
+          intent: "changeRole",
+          role: "admin",
+        },
+      },
     );
     expect(roleResponse.status()).toBe(403);
 
     const kickResponse = await memberPage.request.post(
-      `/communities/${community.slug}/members/${targetMembership.id}/kick`,
+      `/communities/${community.slug}/members`,
+      { form: { membershipId: targetMembership.id, intent: "kick" } },
     );
     expect(kickResponse.status()).toBe(403);
 
@@ -128,8 +135,14 @@ test.describe("members management", () => {
     const adminPage = await adminContext.newPage();
 
     const roleResponse = await adminPage.request.post(
-      `/communities/${community.slug}/members/${targetMembership.id}/role`,
-      { form: { role: "admin" } },
+      `/communities/${community.slug}/members`,
+      {
+        form: {
+          membershipId: targetMembership.id,
+          intent: "changeRole",
+          role: "admin",
+        },
+      },
     );
     expect(roleResponse.ok()).toBe(true);
     const promoted = await prisma.communityMembership.findUniqueOrThrow({
@@ -138,7 +151,8 @@ test.describe("members management", () => {
     expect(promoted.role).toBe("admin");
 
     const kickResponse = await adminPage.request.post(
-      `/communities/${community.slug}/members/${targetMembership.id}/kick`,
+      `/communities/${community.slug}/members`,
+      { form: { membershipId: targetMembership.id, intent: "kick" } },
     );
     expect(kickResponse.ok()).toBe(true);
     const kicked = await prisma.communityMembership.findUniqueOrThrow({
@@ -164,8 +178,14 @@ test.describe("members management", () => {
     const ownerPage = await ownerContext.newPage();
 
     const roleResponse = await ownerPage.request.post(
-      `/communities/${community.slug}/members/${targetMembership.id}/role`,
-      { form: { role: "admin" } },
+      `/communities/${community.slug}/members`,
+      {
+        form: {
+          membershipId: targetMembership.id,
+          intent: "changeRole",
+          role: "admin",
+        },
+      },
     );
     expect(roleResponse.ok()).toBe(true);
     const promoted = await prisma.communityMembership.findUniqueOrThrow({
@@ -174,7 +194,8 @@ test.describe("members management", () => {
     expect(promoted.role).toBe("admin");
 
     const kickResponse = await ownerPage.request.post(
-      `/communities/${community.slug}/members/${targetMembership.id}/kick`,
+      `/communities/${community.slug}/members`,
+      { form: { membershipId: targetMembership.id, intent: "kick" } },
     );
     expect(kickResponse.ok()).toBe(true);
     const kicked = await prisma.communityMembership.findUniqueOrThrow({
@@ -222,24 +243,38 @@ test.describe("members management", () => {
     ).toHaveCount(0);
 
     const ownerRoleResponse = await adminPage.request.post(
-      `/communities/${community.slug}/members/${ownerMembership.id}/role`,
-      { form: { role: "member" } },
+      `/communities/${community.slug}/members`,
+      {
+        form: {
+          membershipId: ownerMembership.id,
+          intent: "changeRole",
+          role: "member",
+        },
+      },
     );
     expect(ownerRoleResponse.status()).toBe(403);
 
     const ownerKickResponse = await adminPage.request.post(
-      `/communities/${community.slug}/members/${ownerMembership.id}/kick`,
+      `/communities/${community.slug}/members`,
+      { form: { membershipId: ownerMembership.id, intent: "kick" } },
     );
     expect(ownerKickResponse.status()).toBe(403);
 
     const selfRoleResponse = await adminPage.request.post(
-      `/communities/${community.slug}/members/${adminMembership.id}/role`,
-      { form: { role: "member" } },
+      `/communities/${community.slug}/members`,
+      {
+        form: {
+          membershipId: adminMembership.id,
+          intent: "changeRole",
+          role: "member",
+        },
+      },
     );
     expect(selfRoleResponse.status()).toBe(403);
 
     const selfKickResponse = await adminPage.request.post(
-      `/communities/${community.slug}/members/${adminMembership.id}/kick`,
+      `/communities/${community.slug}/members`,
+      { form: { membershipId: adminMembership.id, intent: "kick" } },
     );
     expect(selfKickResponse.status()).toBe(403);
 

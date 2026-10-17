@@ -29,12 +29,7 @@ function renderMemberCard(
       path: "/",
       element: (
         <I18nextProvider i18n={i18n}>
-          <MemberCard
-            member={member}
-            communitySlug="test-community"
-            canManage={true}
-            {...overrides}
-          />
+          <MemberCard member={member} canManage={true} {...overrides} />
         </I18nextProvider>
       ),
     },
