@@ -94,12 +94,13 @@ test.describe("invite link management", () => {
 
     const generateResponse = await memberPage.request.post(
       `/communities/${community.slug}/invite`,
-      { form: { expiryPreset: "7" } },
+      { form: { intent: "create", expiryPreset: "7" } },
     );
     expect(generateResponse.status()).toBe(403);
 
     const revokeResponse = await memberPage.request.post(
-      `/communities/${community.slug}/invite/${inviteToken.id}/revoke`,
+      `/communities/${community.slug}/invite`,
+      { form: { intent: "revoke", inviteTokenId: inviteToken.id } },
     );
     expect(revokeResponse.status()).toBe(403);
 
@@ -132,7 +133,7 @@ test.describe("invite link management", () => {
 
     const generateResponse = await adminPage.request.post(
       `/communities/${community.slug}/invite`,
-      { form: { expiryPreset: "" } },
+      { form: { intent: "create", expiryPreset: "" } },
     );
     expect(generateResponse.ok()).toBe(true);
     const created = await prisma.inviteToken.findFirstOrThrow({
@@ -147,7 +148,8 @@ test.describe("invite link management", () => {
     await expect(adminRow.getByText("Never")).toBeVisible();
 
     const revokeResponse = await adminPage.request.post(
-      `/communities/${community.slug}/invite/${ownerCreatedToken.id}/revoke`,
+      `/communities/${community.slug}/invite`,
+      { form: { intent: "revoke", inviteTokenId: ownerCreatedToken.id } },
     );
     expect(revokeResponse.ok()).toBe(true);
     const revoked = await prisma.inviteToken.findUniqueOrThrow({
@@ -168,7 +170,7 @@ test.describe("invite link management", () => {
     const beforeGenerate = Date.now();
     const response = await page.request.post(
       `/communities/${community.slug}/invite`,
-      { form: { expiryPreset: "1" } },
+      { form: { intent: "create", expiryPreset: "1" } },
     );
     expect(response.ok()).toBe(true);
 

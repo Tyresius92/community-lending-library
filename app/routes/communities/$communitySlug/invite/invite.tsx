@@ -117,42 +117,72 @@ export const action = async ({
     throw new Response("Forbidden", { status: 403 });
   }
 
-  const t = getInstance(context).getFixedT(getLocale(context), "invite");
   const formData = await request.formData();
+  const intent = formData.get("intent");
 
-  const result = inviteTokenGenerateSchema.safeParse(
-    Object.fromEntries(formData),
-  );
-  if (!result.success) {
-    return data({ error: t("errors.expiryInvalid") }, { status: 400 });
+  switch (intent) {
+    case "create": {
+      const t = getInstance(context).getFixedT(getLocale(context), "invite");
+      const result = inviteTokenGenerateSchema.safeParse(
+        Object.fromEntries(formData),
+      );
+      if (!result.success) {
+        return data({ error: t("errors.expiryInvalid") }, { status: 400 });
+      }
+
+      await prisma.inviteToken.create({
+        data: {
+          token: generateInviteToken(),
+          community: { connect: { id: found.community.id } },
+          createdBy: { connect: { id: userId } },
+          expiresAt: computeExpiresAt(result.data.expiryPreset),
+        },
+      });
+
+      return redirect(`/communities/${params.communitySlug}/invite`);
+    }
+    case "revoke": {
+      const inviteTokenId = formData.get("inviteTokenId");
+      if (typeof inviteTokenId !== "string") {
+        throw new Response("Bad Request", { status: 400 });
+      }
+
+      const target = await prisma.inviteToken.findFirst({
+        where: {
+          id: inviteTokenId,
+          communityId: found.community.id,
+          revokedAt: null,
+        },
+      });
+      if (!target) {
+        throw new Response("Not Found", { status: 404 });
+      }
+
+      await prisma.inviteToken.update({
+        where: { id: target.id },
+        data: { revokedAt: new Date(), revokedByUserId: userId },
+      });
+
+      return redirect(`/communities/${params.communitySlug}/invite`);
+    }
+    default:
+      throw new Response("Bad Request", { status: 400 });
   }
-
-  await prisma.inviteToken.create({
-    data: {
-      token: generateInviteToken(),
-      community: { connect: { id: found.community.id } },
-      createdBy: { connect: { id: userId } },
-      expiresAt: computeExpiresAt(result.data.expiryPreset),
-    },
-  });
-
-  return redirect(`/communities/${params.communitySlug}/invite`);
 };
 
 export default function Invite({
   loaderData,
   actionData,
-  params,
 }: Route.ComponentProps) {
   const { t } = useTranslation("invite");
   const { links } = loaderData;
-  const { communitySlug } = params;
   const [revokeTokenId, setRevokeTokenId] = useState<string | null>(null);
 
   return (
     <div>
       <h1>{t("headings.invite")}</h1>
       <Form method="post">
+        <input type="hidden" name="intent" value="create" />
         <RadioGroup
           label={t("labels.expiryPreset")}
           name="expiryPreset"
@@ -225,10 +255,13 @@ export default function Invite({
             >
               {t("buttons.cancel")}
             </Button>
-            <Form
-              method="post"
-              action={`/communities/${communitySlug}/invite/${revokeTokenId}/revoke`}
-            >
+            <Form method="post">
+              <input
+                type="hidden"
+                name="inviteTokenId"
+                value={revokeTokenId ?? ""}
+              />
+              <input type="hidden" name="intent" value="revoke" />
               <Button type="submit" variant="danger">
                 {t("buttons.confirmRevoke")}
               </Button>

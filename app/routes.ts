@@ -51,10 +51,6 @@ export default [
         ]),
         ...prefix("invite", [
           index("routes/communities/$communitySlug/invite/invite.tsx"),
-          route(
-            ":inviteTokenId/revoke",
-            "routes/communities/$communitySlug/invite/$inviteTokenId/revoke/revoke.tsx",
-          ),
         ]),
         ...prefix("loans", [
           index("routes/communities/$communitySlug/loans/loans.tsx"),
