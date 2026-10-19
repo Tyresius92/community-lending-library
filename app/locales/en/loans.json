@@ -5,7 +5,8 @@
   },
   "headings": {
     "borrowing": "Borrowing",
-    "lending": "Lending"
+    "lending": "Lending",
+    "messages": "Messages"
   },
   "labels": {
     "item": "Item",
@@ -14,7 +15,9 @@
     "borrower": "Borrower",
     "borrowerPlaceholder": "A neighbor",
     "status": "Status",
-    "actions": "Actions"
+    "actions": "Actions",
+    "you": "You",
+    "message": "Message"
   },
   "status": {
     "pending": "Pending",
@@ -33,7 +36,8 @@
     "close": "Close",
     "checkout": "Check out",
     "confirmReturn": "I got it back",
-    "iReturnedIt": "I returned it"
+    "iReturnedIt": "I returned it",
+    "send": "Send"
   },
   "notices": {
     "confirmCancelTitle": "Cancel this loan?",
@@ -41,6 +45,12 @@
     "noBorrowing": "You don't have any loans yet.",
     "noLending": "No one has requested to borrow from you yet.",
     "borrowerReportedReturn": "The borrower says this has been returned.",
-    "returnReportedByYou": "You reported this as returned. Waiting for the owner to confirm."
+    "returnReportedByYou": "You reported this as returned. Waiting for the owner to confirm.",
+    "noMessages": "No messages yet.",
+    "messagingClosed": "Messaging is closed for this loan."
+  },
+  "errors": {
+    "bodyRequired": "Enter a message.",
+    "bodyTooLong": "Messages can be at most {{max}} characters."
   }
 }

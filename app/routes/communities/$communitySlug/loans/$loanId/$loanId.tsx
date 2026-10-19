@@ -1,29 +1,44 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Form, redirect } from "react-router";
+import { data, Form, redirect } from "react-router";
 
 import { Button } from "~/components/button/button";
 import { Modal } from "~/components/modal/modal";
+import { TextArea } from "~/components/text_area/text_area";
 import { prisma } from "~/db.server";
 import { emailT } from "~/emails/locale.server";
 import { ReturnFlaggedEmail } from "~/emails/return_flagged_email";
 import type { LoanStatus } from "~/generated/prisma/client";
+import { getInstance, getLocale } from "~/i18n/middleware.server";
 import { sendEmail } from "~/mailer.server";
+import {
+  BODY_MAX_LENGTH,
+  isMessageErrorCode,
+  messageCreateSchema,
+  type MessageErrorCode,
+} from "~/schemas/message";
 import { getUserId, loginRedirect } from "~/session.server";
 import { safeRedirect } from "~/utils";
 import { getCommunityMembership } from "~/utils/community_role.server";
 import { expireIfNeeded } from "~/utils/loan_expiry.server";
+import { splitIntoLines } from "~/utils/message_lines.server";
 
 import type { Route } from "./+types/$loanId";
 
 const OWNER_REVEALED_STATUSES: LoanStatus[] = ["pending", "accepted", "active"];
 const BORROWER_REVEALED_STATUSES: LoanStatus[] = ["accepted", "active"];
+const LIVE_STATUSES: LoanStatus[] = ["pending", "accepted", "active"];
 
 export const meta: Route.MetaFunction = ({ loaderData }) => [
   { title: loaderData.title },
 ];
 
-export const loader = async ({ params, request, url }: Route.LoaderArgs) => {
+export const loader = async ({
+  params,
+  request,
+  context,
+  url,
+}: Route.LoaderArgs) => {
   const userId = await getUserId(request);
   if (!userId) {
     return loginRedirect(url);
@@ -92,6 +107,26 @@ export const loader = async ({ params, request, url }: Route.LoaderArgs) => {
     otherPartyDisplayName = loan.borrower.memberships[0]?.displayName ?? null;
   }
 
+  const isThreadOpen = LIVE_STATUSES.includes(loan.status);
+  const dateFormatter = new Intl.DateTimeFormat(getLocale(context), {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+  const rawMessages = isThreadOpen
+    ? await prisma.message.findMany({
+        where: { loanId: loan.id },
+        orderBy: { createdAt: "asc" },
+        select: { id: true, senderId: true, body: true, createdAt: true },
+      })
+    : [];
+  const messages = rawMessages.map((message) => ({
+    id: message.id,
+    lines: splitIntoLines(message.body),
+    isMine: message.senderId === userId,
+    sentAt: message.createdAt.toISOString(),
+    sentAtLabel: dateFormatter.format(message.createdAt),
+  }));
+
   const actions = {
     canAccept: viewerRole === "owner" && loan.status === "pending",
     canDecline: viewerRole === "owner" && loan.status === "pending",
@@ -121,10 +156,16 @@ export const loader = async ({ params, request, url }: Route.LoaderArgs) => {
       borrowerConfirmedReturnAt: loan.borrowerConfirmedReturnAt,
     },
     actions,
+    thread: { isOpen: isThreadOpen, messages },
   };
 };
 
-export const action = async ({ params, request, url }: Route.ActionArgs) => {
+export const action = async ({
+  params,
+  request,
+  context,
+  url,
+}: Route.ActionArgs) => {
   const userId = await getUserId(request);
   if (!userId) {
     return loginRedirect(url);
@@ -164,7 +205,7 @@ export const action = async ({ params, request, url }: Route.ActionArgs) => {
   switch (intent) {
     case "accept": {
       if (viewerRole !== "owner" || loan.status !== "pending") {
-        return new Response(null, { status: 403 });
+        throw new Response("Forbidden", { status: 403 });
       }
       await prisma.loan.update({
         where: { id: loan.id },
@@ -174,7 +215,7 @@ export const action = async ({ params, request, url }: Route.ActionArgs) => {
     }
     case "decline": {
       if (viewerRole !== "owner" || loan.status !== "pending") {
-        return new Response(null, { status: 403 });
+        throw new Response("Forbidden", { status: 403 });
       }
       await prisma.loan.update({
         where: { id: loan.id },
@@ -189,7 +230,7 @@ export const action = async ({ params, request, url }: Route.ActionArgs) => {
             (loan.status === "accepted" && loan.checkedOutAt === null)
           : loan.status === "accepted" && loan.checkedOutAt === null;
       if (!isCancellable) {
-        return new Response(null, { status: 403 });
+        throw new Response("Forbidden", { status: 403 });
       }
       await prisma.loan.update({
         where: { id: loan.id },
@@ -203,7 +244,7 @@ export const action = async ({ params, request, url }: Route.ActionArgs) => {
     }
     case "checkout": {
       if (loan.status !== "accepted") {
-        return new Response(null, { status: 403 });
+        throw new Response("Forbidden", { status: 403 });
       }
       await prisma.loan.update({
         where: { id: loan.id },
@@ -217,7 +258,7 @@ export const action = async ({ params, request, url }: Route.ActionArgs) => {
         loan.status !== "active" ||
         loan.borrowerConfirmedReturnAt !== null
       ) {
-        return new Response(null, { status: 403 });
+        throw new Response("Forbidden", { status: 403 });
       }
       await prisma.loan.update({
         where: { id: loan.id },
@@ -243,11 +284,44 @@ export const action = async ({ params, request, url }: Route.ActionArgs) => {
     }
     case "confirm_return": {
       if (viewerRole !== "owner" || loan.status !== "active") {
-        return new Response(null, { status: 403 });
+        throw new Response("Forbidden", { status: 403 });
       }
       await prisma.loan.update({
         where: { id: loan.id },
         data: { status: "completed", ownerConfirmedReturnAt: new Date() },
+      });
+      return redirect(redirectTo);
+    }
+    case "send_message": {
+      if (!LIVE_STATUSES.includes(loan.status)) {
+        throw new Response("Forbidden", { status: 403 });
+      }
+      const result = messageCreateSchema.safeParse(
+        Object.fromEntries(formData),
+      );
+      if (!result.success) {
+        const t = getInstance(context).getFixedT(getLocale(context), "loans");
+        const messages: Record<MessageErrorCode, string> = {
+          BODY_REQUIRED: t("errors.bodyRequired"),
+          BODY_TOO_LONG: t("errors.bodyTooLong", { max: BODY_MAX_LENGTH }),
+        };
+        const issue = result.error.issues.find(
+          (issue) => issue.path[0] === "body",
+        );
+        return data(
+          {
+            errors: {
+              body:
+                issue && isMessageErrorCode(issue.message)
+                  ? messages[issue.message]
+                  : undefined,
+            },
+          },
+          { status: 400 },
+        );
+      }
+      await prisma.message.create({
+        data: { loanId: loan.id, senderId: userId, body: result.data.body },
       });
       return redirect(redirectTo);
     }
@@ -256,10 +330,20 @@ export const action = async ({ params, request, url }: Route.ActionArgs) => {
   }
 };
 
-export default function LoanDetail({ loaderData }: Route.ComponentProps) {
+export default function LoanDetail({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
   const { t } = useTranslation("loans");
-  const { loan, actions } = loaderData;
+  const { loan, actions, thread } = loaderData;
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const otherPartyLabel =
+    loan.otherPartyDisplayName ??
+    t(
+      loan.viewerRole === "owner"
+        ? "labels.borrowerPlaceholder"
+        : "labels.ownerPlaceholder",
+    );
 
   return (
     <div>
@@ -269,12 +353,7 @@ export default function LoanDetail({ loaderData }: Route.ComponentProps) {
       </p>
       <p>
         {t(loan.viewerRole === "owner" ? "labels.borrower" : "labels.owner")}:{" "}
-        {loan.otherPartyDisplayName ??
-          t(
-            loan.viewerRole === "owner"
-              ? "labels.borrowerPlaceholder"
-              : "labels.ownerPlaceholder",
-          )}
+        {otherPartyLabel}
       </p>
 
       {actions.canAccept ? (
@@ -338,6 +417,53 @@ export default function LoanDetail({ loaderData }: Route.ComponentProps) {
           {t("buttons.cancel")}
         </Button>
       ) : null}
+
+      <section aria-labelledby="messages-heading">
+        <h2 id="messages-heading">{t("headings.messages")}</h2>
+        {thread.isOpen ? (
+          <>
+            {thread.messages.length === 0 ? (
+              <p>{t("notices.noMessages")}</p>
+            ) : (
+              <ol>
+                {thread.messages.map((message) => (
+                  <li key={message.id}>
+                    <p>
+                      {message.isMine ? t("labels.you") : otherPartyLabel}{" "}
+                      <time dateTime={message.sentAt}>
+                        {message.sentAtLabel}
+                      </time>
+                    </p>
+                    <p>
+                      {message.lines.map((line) => (
+                        <Fragment key={line.offset}>
+                          {line.offset > 0 ? <br /> : null}
+                          {line.text}
+                        </Fragment>
+                      ))}
+                    </p>
+                  </li>
+                ))}
+              </ol>
+            )}
+            <Form method="post">
+              <input type="hidden" name="intent" value="send_message" />
+              <TextArea
+                label={t("labels.message")}
+                name="body"
+                required
+                maxLength={BODY_MAX_LENGTH}
+                errorMessage={actionData?.errors.body}
+              />
+              <Button type="submit" variant="primary">
+                {t("buttons.send")}
+              </Button>
+            </Form>
+          </>
+        ) : (
+          <p>{t("notices.messagingClosed")}</p>
+        )}
+      </section>
 
       <Modal
         isOpen={isCancelModalOpen}
