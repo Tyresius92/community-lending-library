@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { itemCreateSchema, itemEditSchema } from "./item";
+import {
+  DESCRIPTION_MAX_LENGTH,
+  itemCreateSchema,
+  itemEditSchema,
+  NAME_MAX_LENGTH,
+} from "./item";
 
 function buildFormData(entries: Record<string, string>): FormData {
   const formData = new FormData();
@@ -37,22 +42,28 @@ describe("itemCreateSchema", () => {
     },
     {
       name: "accepts a name at exactly the max length",
-      entries: { name: "a".repeat(100), description: "" },
+      entries: { name: "a".repeat(NAME_MAX_LENGTH), description: "" },
       expectedErrors: {},
     },
     {
       name: "rejects a name over the max length",
-      entries: { name: "a".repeat(101), description: "" },
+      entries: { name: "a".repeat(NAME_MAX_LENGTH + 1), description: "" },
       expectedErrors: { name: "NAME_TOO_LONG" },
     },
     {
       name: "accepts a description at exactly the max length",
-      entries: { name: "Valid Name", description: "a".repeat(1000) },
+      entries: {
+        name: "Valid Name",
+        description: "a".repeat(DESCRIPTION_MAX_LENGTH),
+      },
       expectedErrors: {},
     },
     {
       name: "rejects a description over the max length",
-      entries: { name: "Valid Name", description: "a".repeat(1001) },
+      entries: {
+        name: "Valid Name",
+        description: "a".repeat(DESCRIPTION_MAX_LENGTH + 1),
+      },
       expectedErrors: { description: "DESCRIPTION_TOO_LONG" },
     },
     {
