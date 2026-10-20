@@ -1,6 +1,6 @@
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { data, Form, redirect } from "react-router";
+import { data, Form, redirect, useNavigation } from "react-router";
 
 import { Button } from "~/components/button/button";
 import { Modal } from "~/components/modal/modal";
@@ -337,6 +337,20 @@ export default function LoanDetail({
   const { t } = useTranslation("loans");
   const { loan, actions, thread } = loaderData;
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const navigation = useNavigation();
+  const messageFormRef = useRef<HTMLFormElement>(null);
+  const wasSendingRef = useRef(false);
+  const isSending =
+    navigation.state !== "idle" &&
+    navigation.formData?.get("intent") === "send_message";
+
+  useEffect(() => {
+    if (wasSendingRef.current && !isSending && !actionData?.errors.body) {
+      messageFormRef.current?.reset();
+    }
+    wasSendingRef.current = isSending;
+  }, [isSending, actionData]);
+
   const otherPartyLabel =
     loan.otherPartyDisplayName ??
     t(
@@ -446,7 +460,7 @@ export default function LoanDetail({
                 ))}
               </ol>
             )}
-            <Form method="post">
+            <Form method="post" ref={messageFormRef}>
               <input type="hidden" name="intent" value="send_message" />
               <TextArea
                 label={t("labels.message")}
