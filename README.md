@@ -55,3 +55,13 @@ npm run ship-check   # typecheck, unit tests, build, e2e, lint, format
 ```
 
 Vitest covers unit-level and component-level tests; Playwright covers end-to-end flows through the UI. See [CLAUDE.md](CLAUDE.md) for the full breakdown of what goes where.
+
+## License
+
+Copyright (C) 2026 Tyrel Clayton
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+
+See [LICENSE](LICENSE) for the full text. Outside contributions aren't being accepted at this time.

@@ -1,6 +1,7 @@
 {
   "name": "community-lending-library-5105",
   "private": true,
+  "license": "AGPL-3.0-or-later",
   "sideEffects": false,
   "type": "module",
   "scripts": {
