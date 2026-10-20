@@ -23,6 +23,10 @@ import type { Route } from "./+types/root";
 import { Box } from "./components/box/box";
 import { Link } from "./components/link/link";
 
+const SOURCE_CODE_URL = new URL(
+  "https://github.com/Tyresius92/community-lending-library",
+);
+
 export const middleware: Route.MiddlewareFunction[] = [i18nextMiddleware];
 
 export const links: LinksFunction = () => [
@@ -74,6 +78,11 @@ export default function App({ loaderData }: Route.ComponentProps) {
           </Box>
         </header>
         <Outlet />
+        <footer>
+          <Box p={16}>
+            <Link href={SOURCE_CODE_URL}>{t("footer.sourceCode")}</Link>
+          </Box>
+        </footer>
         <ScrollRestoration />
         <Scripts />
       </body>
