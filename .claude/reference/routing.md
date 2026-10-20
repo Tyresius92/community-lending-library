@@ -62,7 +62,7 @@ See the live version in [app/routes.ts](../../app/routes.ts) and `app/routes/com
 
 ## Community IA
 
-Community-scoped screens (`items`, `members`, `loans`) nest under `/communities/:communitySlug` as siblings. `/communities` one level up is the only place "my communities" (join/leave/switch) lives. `Message` isn't wired up yet.
+Community-scoped screens (`items`, `members`, `loans`) nest under `/communities/:communitySlug` as siblings. `/communities` one level up is the only place "my communities" (join/leave/switch) lives. `Message` has no route of its own: a loan's thread renders on `loans/$loanId/$loanId.tsx`, and sending goes through that page's action as a `send_message` intent (see [ADR-007](../../docs/adr/ADR-007-colocated-multi-intent-actions-over-resource-routes.md)).
 
 ## `items`
 

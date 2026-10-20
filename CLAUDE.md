@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A React Router (Framework Mode) + Prisma + PostgreSQL app for a community lending library — members share items within a community and track loans through a request/accept/checkout/return lifecycle.
 
-The Prisma schema (`prisma/schema.prisma`) already models the full domain — `Community`, `CommunityMembership`, `Item`, `Loan`, `Message`, `InviteToken`. Application code has partially caught up: auth, communities, `Item` management, `Loan`, and `InviteToken` are wired up; `Message` is not yet. Check whether the schema already has the shape you need before changing it. See [docs/adr/](docs/adr/) for the reasoning behind major decisions.
+The Prisma schema (`prisma/schema.prisma`) already models the full domain — `Community`, `CommunityMembership`, `Item`, `Loan`, `Message`, `InviteToken`. Application code now covers all of it: auth, communities, `Item` management, `Loan`, `InviteToken`, and `Message` (per-loan threads) are wired up. Check whether the schema already has the shape you need before changing it. See [docs/adr/](docs/adr/) for the reasoning behind major decisions.
 
 This file stays short on purpose. "How this codebase is shaped" — routing, data model, i18n, auth, validation, components, testing, logging — lives under [.claude/reference/](.claude/reference/), one file per domain, pointed to from the Delegation table below. Read the relevant file when a fork in that category comes up, rather than expecting everything inline here.
 
